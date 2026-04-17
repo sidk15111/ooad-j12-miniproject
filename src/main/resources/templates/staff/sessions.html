@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Sessions</title>
+    <style>
+        body { margin: 0; font-family: "Segoe UI", sans-serif; background: #f5f7f2; color: #1f2937; }
+        .container { width: min(1100px, 95vw); margin: 24px auto; }
+        .panel { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+        form { display: inline-flex; gap: 8px; margin: 2px; }
+        input, button { padding: 8px 10px; font: inherit; }
+        button { border: none; border-radius: 8px; color: white; background: #0f766e; cursor: pointer; }
+        button.alt { background: #0369a1; }
+        button.warn { background: #475569; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border-bottom: 1px solid #e5e7eb; padding: 9px; text-align: left; }
+        .msg { padding: 8px 10px; border-radius: 8px; margin-bottom: 8px; font-weight: 600; }
+        .ok { background: #dcfce7; color: #166534; }
+        .err { background: #fee2e2; color: #b91c1c; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <section class="panel">
+        <h1>Service Staff Sessions</h1>
+        <div th:if="${success}" class="msg ok" th:text="${success}"></div>
+        <div th:if="${error}" class="msg err" th:text="${error}"></div>
+
+        <form th:action="@{/staff/sessions}" method="post">
+            <input name="staffUsername" placeholder="Staff username" required>
+            <button type="submit">Create Session</button>
+        </form>
+    </section>
+
+    <section class="panel">
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Staff</th>
+                <th>Status</th>
+                <th>State Object</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${#lists.isEmpty(sessions)}"><td colspan="5">No sessions</td></tr>
+            <tr th:each="session : ${sessions}">
+                <td th:text="${session.id}"></td>
+                <td th:text="${session.staffUsername}"></td>
+                <td th:text="${session.status}"></td>
+                <td th:text="${session.currentStateName}"></td>
+                <td>
+                    <form th:action="@{/staff/sessions/{id}/activate(id=${session.id})}" method="post">
+                        <button type="submit">Activate</button>
+                    </form>
+                    <form th:action="@{/staff/sessions/{id}/pause(id=${session.id})}" method="post">
+                        <button class="alt" type="submit">Pause</button>
+                    </form>
+                    <form th:action="@{/staff/sessions/{id}/resume(id=${session.id})}" method="post">
+                        <button class="warn" type="submit">Resume</button>
+                    </form>
+                    <form th:action="@{/staff/sessions/{id}/complete(id=${session.id})}" method="post">
+                        <button class="warn" type="submit">Complete</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+</div>
+</body>
+</html>

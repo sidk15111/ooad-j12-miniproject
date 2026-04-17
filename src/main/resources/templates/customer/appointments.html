@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Appointments</title>
+    <style>
+        body { margin: 0; font-family: Verdana, sans-serif; background: #f4f8ff; color: #1f2937; }
+        .container { width: min(1100px, 95vw); margin: 24px auto; }
+        .panel { background: white; border: 1px solid #dbe3ef; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+        form { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        input, button { padding: 8px 10px; font: inherit; }
+        button { border: none; border-radius: 8px; background: #1d4ed8; color: white; cursor: pointer; }
+        button.warn { background: #b91c1c; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border-bottom: 1px solid #e5e7eb; padding: 9px; text-align: left; }
+        .msg { padding: 8px 10px; border-radius: 8px; margin-bottom: 8px; font-weight: 600; }
+        .ok { background: #dcfce7; color: #166534; }
+        .err { background: #fee2e2; color: #b91c1c; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <section class="panel">
+        <h1>Customer Appointments</h1>
+        <div th:if="${success}" class="msg ok" th:text="${success}"></div>
+        <div th:if="${error}" class="msg err" th:text="${error}"></div>
+
+        <form th:action="@{/customer/appointments}" method="post">
+            <input name="customerName" placeholder="Customer name" required>
+            <input name="slotTime" type="datetime-local" required>
+            <button type="submit">Create</button>
+        </form>
+    </section>
+
+    <section class="panel">
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Customer</th>
+                <th>Slot</th>
+                <th>Status</th>
+                <th>State Object</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${#lists.isEmpty(appointments)}"><td colspan="6">No appointments</td></tr>
+            <tr th:each="appointment : ${appointments}">
+                <td th:text="${appointment.id}"></td>
+                <td th:text="${appointment.customerName}"></td>
+                <td th:text="${appointment.slotTime}"></td>
+                <td th:text="${appointment.status}"></td>
+                <td th:text="${appointment.currentStateName}"></td>
+                <td>
+                    <form th:action="@{/customer/appointments/{id}/confirm(id=${appointment.id})}" method="post">
+                        <button type="submit">Confirm</button>
+                    </form>
+                    <form th:action="@{/customer/appointments/{id}/checkin(id=${appointment.id})}" method="post">
+                        <button type="submit">Check-In</button>
+                    </form>
+                    <form th:action="@{/customer/appointments/{id}/cancel(id=${appointment.id})}" method="post">
+                        <button class="warn" type="submit">Cancel</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+</div>
+</body>
+</html>
