@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Queue</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle at top right, #dff5e8, #f4eee5 55%, #f3f5fb);
+            min-height: 100vh;
+            color: #1f2937;
+            display: grid;
+            place-items: center;
+        }
+        .card {
+            width: min(780px, 92vw);
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid #d0d7de;
+            border-radius: 18px;
+            padding: 34px;
+            box-shadow: 0 20px 45px rgba(27, 50, 37, 0.12);
+        }
+        h1 {
+            margin-top: 0;
+            font-size: clamp(1.7rem, 3.8vw, 2.5rem);
+            line-height: 1.2;
+        }
+        p {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #374151;
+        }
+        a {
+            display: inline-block;
+            margin-top: 18px;
+            text-decoration: none;
+            background: #1f6b4f;
+            color: #fff;
+            padding: 11px 18px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .who {
+            color: #1e293b;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        .logout-form {
+            margin: 0;
+        }
+        .logout-btn {
+            margin-top: 0;
+            background: #374151;
+            border: none;
+            cursor: pointer;
+        }
+        .hint {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 10px;
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            color: #334155;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+<main class="card">
+    <div class="toolbar">
+        <div class="who">Logged in as: <span sec:authentication="name">user</span></div>
+        <form class="logout-form" th:action="@{/logout}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button class="logout-btn" type="submit">Logout</button>
+        </form>
+    </div>
+
+    <h1>Smart Queue System</h1>
+    <p>This is the first Spring Boot implementation slice with State + Strategy queue handling, role-based login, and a Java-only Thymeleaf UI.</p>
+
+    <a sec:authorize="hasAnyRole('RECEPTIONIST','ADMIN')" th:href="@{/reception/queue}">Open Reception Desk</a>
+    <a sec:authorize="hasAnyRole('CUSTOMER','ADMIN')" th:href="@{/customer/appointments}" style="margin-left: 8px; background: #1f4d7a;">Open Customer Appointments</a>
+    <a sec:authorize="hasAnyRole('SERVICE_STAFF','ADMIN')" th:href="@{/staff/sessions}" style="margin-left: 8px; background: #7a3f1f;">Open Service Sessions</a>
+
+    <div class="hint" sec:authorize="!hasRole('ADMIN')">
+        Some modules are hidden by role-based access. Use the <strong>admin / admin123</strong> login to access all three modules.
+    </div>
+</main>
+</body>
+</html>
+
