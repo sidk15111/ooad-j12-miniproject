@@ -1,69 +1,115 @@
 package com.pes.smartqueue.service;
 
 import com.pes.smartqueue.exception.InvalidServiceSessionTransitionException;
+import com.pes.smartqueue.model.queue.QueueEntry;
 import com.pes.smartqueue.model.session.ServiceSession;
 import com.pes.smartqueue.model.session.ServiceSessionStatus;
+import com.pes.smartqueue.repository.ServiceSessionRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Service
+@Transactional
 public class ServiceSessionService {
-    private final AtomicLong idSequence = new AtomicLong(1L);
-    private final Map<Long, ServiceSession> sessions = new ConcurrentHashMap<>();
+    private final ServiceSessionRepository serviceSessionRepository;
+    private final QueueService queueService;
 
-    public synchronized ServiceSession create(String staffUsername) {
-        long id = idSequence.getAndIncrement();
-        ServiceSession session = new ServiceSession(id, staffUsername);
-        sessions.put(id, session);
-        return session;
+    public ServiceSessionService(ServiceSessionRepository serviceSessionRepository, QueueService queueService) {
+        this.serviceSessionRepository = serviceSessionRepository;
+        this.queueService = queueService;
     }
 
-    public synchronized void activate(long id) {
+    public ServiceSession create(String staffUsername) {
+        ServiceSession session = new ServiceSession(staffUsername);
+        return serviceSessionRepository.save(session);
+    }
+
+    public void activate(long id) {
         ServiceSession session = require(id);
-        ensureSingleActive(session.getStaffUsername(), id);
+        ensureSingleActive(session.getStaffUsername(), session.getId());
         session.activate();
+        serviceSessionRepository.save(session);
     }
 
-    public synchronized void pause(long id) {
-        require(id).pause();
-    }
-
-    public synchronized void resume(long id) {
+    public void pause(long id) {
         ServiceSession session = require(id);
-        ensureSingleActive(session.getStaffUsername(), id);
+        session.pause();
+        serviceSessionRepository.save(session);
+    }
+
+    public void resume(long id) {
+        ServiceSession session = require(id);
+        ensureSingleActive(session.getStaffUsername(), session.getId());
         session.resume();
+        serviceSessionRepository.save(session);
     }
 
-    public synchronized void complete(long id) {
-        require(id).complete();
+    public void complete(long id) {
+        ServiceSession session = require(id);
+        if (session.getActiveQueueEntryId() != null) {
+            throw new InvalidServiceSessionTransitionException("Complete assigned queue entry before completing session");
+        }
+        session.complete();
+        serviceSessionRepository.save(session);
     }
 
-    public synchronized List<ServiceSession> list() {
-        return sessions.values().stream()
-            .sorted(Comparator.comparing(ServiceSession::getId))
-            .toList();
+    public QueueEntry startNextQueueEntry(long id) {
+        ServiceSession session = require(id);
+        if (session.getStatus() != ServiceSessionStatus.ACTIVE) {
+            throw new InvalidServiceSessionTransitionException("Session must be ACTIVE to start queue work");
+        }
+        if (session.getActiveQueueEntryId() != null) {
+            throw new InvalidServiceSessionTransitionException("Session already has an active queue entry");
+        }
+        QueueEntry started = queueService.startNext();
+        session.assignQueueEntry(started.getId());
+        serviceSessionRepository.save(session);
+        return started;
     }
 
-    private void ensureSingleActive(String staffUsername, long exceptSessionId) {
-        boolean hasAnotherActive = sessions.values().stream()
-            .filter(session -> session.getId() != exceptSessionId)
-            .filter(session -> session.getStaffUsername().equals(staffUsername))
-            .anyMatch(session -> session.getStatus() == ServiceSessionStatus.ACTIVE);
+    public QueueEntry completeAssignedQueueEntry(long id) {
+        ServiceSession session = require(id);
+        Long queueEntryId = session.getActiveQueueEntryId();
+        if (queueEntryId == null) {
+            throw new InvalidServiceSessionTransitionException("No assigned queue entry for this session");
+        }
+        queueService.completeEntry(queueEntryId);
+        QueueEntry completed = queueService.getById(queueEntryId);
+        session.clearQueueEntry();
+        serviceSessionRepository.save(session);
+        return completed;
+    }
+
+    @Transactional(readOnly = true)
+    public QueueEntry getAssignedQueueEntry(long id) {
+        ServiceSession session = require(id);
+        Long queueEntryId = session.getActiveQueueEntryId();
+        if (queueEntryId == null) {
+            return null;
+        }
+        return queueService.getById(queueEntryId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ServiceSession> list() {
+        return serviceSessionRepository.findAllByOrderByIdAsc();
+    }
+
+    private void ensureSingleActive(String staffUsername, Long exceptSessionId) {
+        boolean hasAnotherActive = serviceSessionRepository.existsByStaffUsernameAndStatusAndIdNot(
+            staffUsername,
+            ServiceSessionStatus.ACTIVE,
+            exceptSessionId
+        );
         if (hasAnotherActive) {
             throw new InvalidServiceSessionTransitionException("Staff member already has an ACTIVE session");
         }
     }
 
     private ServiceSession require(long id) {
-        ServiceSession session = sessions.get(id);
-        if (session == null) {
-            throw new IllegalArgumentException("Service session not found: " + id);
-        }
-        return session;
+        return serviceSessionRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Service session not found: " + id));
     }
 }

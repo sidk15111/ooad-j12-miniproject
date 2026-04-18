@@ -8,6 +8,9 @@
         body { margin: 0; font-family: "Segoe UI", sans-serif; background: #f5f7f2; color: #1f2937; }
         .container { width: min(1100px, 95vw); margin: 24px auto; }
         .panel { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+        .topbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .top-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .ghost { text-decoration: none; border: 1px solid #cbd5e1; color: #0f172a; background: #fff; padding: 7px 10px; border-radius: 8px; font-size: 0.95rem; }
         form { display: inline-flex; gap: 8px; margin: 2px; }
         input, button { padding: 8px 10px; font: inherit; }
         button { border: none; border-radius: 8px; color: white; background: #0f766e; cursor: pointer; }
@@ -23,7 +26,16 @@
 <body>
 <div class="container">
     <section class="panel">
-        <h1>Service Staff Sessions</h1>
+        <div class="topbar">
+            <h1>Service Staff Sessions</h1>
+            <div class="top-actions">
+                <a class="ghost" th:href="@{/}">Home</a>
+                <form th:action="@{/logout}" method="post">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <button type="submit">Logout</button>
+                </form>
+            </div>
+        </div>
         <div th:if="${success}" class="msg ok" th:text="${success}"></div>
         <div th:if="${error}" class="msg err" th:text="${error}"></div>
 
@@ -34,34 +46,68 @@
     </section>
 
     <section class="panel">
+        <h2>Queue Snapshot (Waiting/In Progress)</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>Queue ID</th>
+                <th>Customer</th>
+                <th>Type</th>
+                <th>Status</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${#lists.isEmpty(queueSnapshot)}"><td colspan="4">No active queue entries</td></tr>
+            <tr th:each="entry : ${queueSnapshot}">
+                <td th:text="${entry.id}"></td>
+                <td th:text="${entry.customerName}"></td>
+                <td th:text="${entry.type}"></td>
+                <td th:text="${entry.status}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section class="panel">
         <table>
             <thead>
             <tr>
                 <th>ID</th>
                 <th>Staff</th>
                 <th>Status</th>
+                <th>Assigned Queue Entry</th>
                 <th>State Object</th>
                 <th>Actions</th>
             </tr>
             </thead>
             <tbody>
-            <tr th:if="${#lists.isEmpty(sessions)}"><td colspan="5">No sessions</td></tr>
+            <tr th:if="${#lists.isEmpty(sessions)}"><td colspan="6">No sessions</td></tr>
             <tr th:each="session : ${sessions}">
                 <td th:text="${session.id}"></td>
                 <td th:text="${session.staffUsername}"></td>
                 <td th:text="${session.status}"></td>
+                <td>
+                    <span th:if="${assignedBySession[session.id] != null}" th:text="${assignedBySession[session.id].id + ' - ' + assignedBySession[session.id].customerName}"></span>
+                    <span th:if="${assignedBySession[session.id] == null}">None</span>
+                </td>
                 <td th:text="${session.currentStateName}"></td>
                 <td>
-                    <form th:action="@{/staff/sessions/{id}/activate(id=${session.id})}" method="post">
+                    <form th:if="${session.status.name() == 'IDLE'}" th:action="@{/staff/sessions/{id}/activate(id=${session.id})}" method="post">
                         <button type="submit">Activate</button>
                     </form>
-                    <form th:action="@{/staff/sessions/{id}/pause(id=${session.id})}" method="post">
+                    <form th:if="${session.status.name() == 'ACTIVE'}" th:action="@{/staff/sessions/{id}/start-next(id=${session.id})}" method="post">
+                        <button type="submit">Start Next Queue</button>
+                    </form>
+                    <form th:if="${assignedBySession[session.id] != null}" th:action="@{/staff/sessions/{id}/complete-current(id=${session.id})}" method="post">
+                        <button class="alt" type="submit">Complete Assigned</button>
+                    </form>
+                    <form th:if="${session.status.name() == 'ACTIVE'}" th:action="@{/staff/sessions/{id}/pause(id=${session.id})}" method="post">
                         <button class="alt" type="submit">Pause</button>
                     </form>
-                    <form th:action="@{/staff/sessions/{id}/resume(id=${session.id})}" method="post">
+                    <form th:if="${session.status.name() == 'PAUSED'}" th:action="@{/staff/sessions/{id}/resume(id=${session.id})}" method="post">
                         <button class="warn" type="submit">Resume</button>
                     </form>
-                    <form th:action="@{/staff/sessions/{id}/complete(id=${session.id})}" method="post">
+                    <form th:if="${session.status.name() == 'ACTIVE' || session.status.name() == 'PAUSED'}" th:action="@{/staff/sessions/{id}/complete(id=${session.id})}" method="post">
                         <button class="warn" type="submit">Complete</button>
                     </form>
                 </td>

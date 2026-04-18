@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -42,15 +42,59 @@
             border-radius: 10px;
             font-weight: 600;
         }
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .who {
+            color: #1e293b;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        .logout-form {
+            margin: 0;
+        }
+        .logout-btn {
+            margin-top: 0;
+            background: #374151;
+            border: none;
+            cursor: pointer;
+        }
+        .hint {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 10px;
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            color: #334155;
+            font-size: 0.95rem;
+        }
     </style>
 </head>
 <body>
 <main class="card">
+    <div class="toolbar">
+        <div class="who">Logged in as: <span sec:authentication="name">user</span></div>
+        <form class="logout-form" th:action="@{/logout}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button class="logout-btn" type="submit">Logout</button>
+        </form>
+    </div>
+
     <h1>Smart Queue System</h1>
     <p>This is the first Spring Boot implementation slice with State + Strategy queue handling, role-based login, and a Java-only Thymeleaf UI.</p>
-    <a th:href="@{/reception/queue}">Open Reception Desk</a>
-    <a th:href="@{/customer/appointments}" style="margin-left: 8px; background: #1f4d7a;">Open Customer Appointments</a>
-    <a th:href="@{/staff/sessions}" style="margin-left: 8px; background: #7a3f1f;">Open Service Sessions</a>
+
+    <a sec:authorize="hasAnyRole('RECEPTIONIST','ADMIN')" th:href="@{/reception/queue}">Open Reception Desk</a>
+    <a sec:authorize="hasAnyRole('CUSTOMER','ADMIN')" th:href="@{/customer/appointments}" style="margin-left: 8px; background: #1f4d7a;">Open Customer Appointments</a>
+    <a sec:authorize="hasAnyRole('SERVICE_STAFF','ADMIN')" th:href="@{/staff/sessions}" style="margin-left: 8px; background: #7a3f1f;">Open Service Sessions</a>
+
+    <div class="hint" sec:authorize="!hasRole('ADMIN')">
+        Some modules are hidden by role-based access. Use the <strong>admin / admin123</strong> login to access all three modules.
+    </div>
 </main>
 </body>
 </html>

@@ -1,5 +1,7 @@
 package com.pes.smartqueue.controller;
 
+import com.pes.smartqueue.model.session.ServiceSession;
+import com.pes.smartqueue.service.QueueService;
 import com.pes.smartqueue.service.ServiceSessionService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,14 +16,22 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequestMapping("/staff")
 public class ServiceStaffController {
     private final ServiceSessionService serviceSessionService;
+    private final QueueService queueService;
 
-    public ServiceStaffController(ServiceSessionService serviceSessionService) {
+    public ServiceStaffController(ServiceSessionService serviceSessionService, QueueService queueService) {
         this.serviceSessionService = serviceSessionService;
+        this.queueService = queueService;
     }
 
     @GetMapping("/sessions")
     public String sessions(Model model) {
         model.addAttribute("sessions", serviceSessionService.list());
+        model.addAttribute("assignedBySession", serviceSessionService.list().stream()
+            .collect(java.util.stream.Collectors.toMap(
+                ServiceSession::getId,
+                session -> serviceSessionService.getAssignedQueueEntry(session.getId())
+            )));
+        model.addAttribute("queueSnapshot", queueService.getOrderedQueue());
         return "staff/sessions";
     }
 
@@ -54,6 +64,16 @@ public class ServiceStaffController {
     @PostMapping("/sessions/{id}/complete")
     public String complete(@PathVariable long id, RedirectAttributes redirectAttributes) {
         return transition(() -> serviceSessionService.complete(id), "Session completed", redirectAttributes);
+    }
+
+    @PostMapping("/sessions/{id}/start-next")
+    public String startNextForSession(@PathVariable long id, RedirectAttributes redirectAttributes) {
+        return transition(() -> serviceSessionService.startNextQueueEntry(id), "Started next queue entry for session", redirectAttributes);
+    }
+
+    @PostMapping("/sessions/{id}/complete-current")
+    public String completeCurrentForSession(@PathVariable long id, RedirectAttributes redirectAttributes) {
+        return transition(() -> serviceSessionService.completeAssignedQueueEntry(id), "Completed assigned queue entry", redirectAttributes);
     }
 
     private String transition(Runnable transitionAction, String successMessage,

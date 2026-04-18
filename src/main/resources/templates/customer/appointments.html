@@ -8,6 +8,9 @@
         body { margin: 0; font-family: Verdana, sans-serif; background: #f4f8ff; color: #1f2937; }
         .container { width: min(1100px, 95vw); margin: 24px auto; }
         .panel { background: white; border: 1px solid #dbe3ef; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+        .topbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .top-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .ghost { text-decoration: none; border: 1px solid #cbd5e1; color: #0f172a; background: #fff; padding: 7px 10px; border-radius: 8px; font-size: 0.95rem; }
         form { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
         input, button { padding: 8px 10px; font: inherit; }
         button { border: none; border-radius: 8px; background: #1d4ed8; color: white; cursor: pointer; }
@@ -22,7 +25,16 @@
 <body>
 <div class="container">
     <section class="panel">
-        <h1>Customer Appointments</h1>
+        <div class="topbar">
+            <h1>Customer Appointments</h1>
+            <div class="top-actions">
+                <a class="ghost" th:href="@{/}">Home</a>
+                <form th:action="@{/logout}" method="post">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <button type="submit">Logout</button>
+                </form>
+            </div>
+        </div>
         <div th:if="${success}" class="msg ok" th:text="${success}"></div>
         <div th:if="${error}" class="msg err" th:text="${error}"></div>
 
@@ -31,6 +43,11 @@
             <input name="slotTime" type="datetime-local" required>
             <button type="submit">Create</button>
         </form>
+
+        <p style="margin-top:10px; color:#334155; font-size:0.95rem;">
+            After you <strong>Check-In</strong>, this appointment appears in the Reception page under
+            <strong>Checked-In Appointments Ready For Queue</strong>.
+        </p>
     </section>
 
     <section class="panel">

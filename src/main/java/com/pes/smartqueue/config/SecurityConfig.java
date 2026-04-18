@@ -24,6 +24,7 @@ public class SecurityConfig {
                 .requestMatchers("/customer/**").hasAnyRole("CUSTOMER", "ADMIN")
                 .requestMatchers("/staff/**").hasAnyRole("SERVICE_STAFF", "ADMIN")
                 .anyRequest().authenticated())
+            .exceptionHandling(ex -> ex.accessDeniedPage("/access-denied"))
             .formLogin(Customizer.withDefaults())
             .logout(Customizer.withDefaults());
         return http.build();
