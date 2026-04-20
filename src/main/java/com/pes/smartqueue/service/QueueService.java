@@ -61,13 +61,19 @@ public class QueueService {
         return queueEntryRepository.findAllByOrderByArrivalTimeAsc();
     }
 
-    public QueueEntry startNext() {
+    public synchronized QueueEntry startNext() {
         QueueEntry next = getOrderedQueue().stream()
             .filter(entry -> entry.getStatus() == QueueStatus.WAITING)
             .findFirst()
             .orElseThrow(() -> new InvalidQueueTransitionException("No WAITING entries available"));
         next.startService();
         return queueEntryRepository.save(next);
+    }
+
+    public void requeueEntry(long id) {
+        QueueEntry entry = requireEntry(id);
+        entry.releaseToWaiting();
+        queueEntryRepository.save(entry);
     }
 
     public void startEntry(long id) {
@@ -112,6 +118,11 @@ public class QueueService {
     @Transactional(readOnly = true)
     public QueueEntry getById(long id) {
         return requireEntry(id);
+    }
+
+    @Transactional(readOnly = true)
+    public QueueEntry findByIdOrNull(long id) {
+        return queueEntryRepository.findById(id).orElse(null);
     }
 
     @Transactional(readOnly = true)

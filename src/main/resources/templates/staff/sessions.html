@@ -40,6 +40,7 @@
         <div th:if="${error}" class="msg err" th:text="${error}"></div>
 
         <form th:action="@{/staff/sessions}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
             <input name="staffUsername" placeholder="Staff username" required>
             <button type="submit">Create Session</button>
         </form>
@@ -82,32 +83,38 @@
             </thead>
             <tbody>
             <tr th:if="${#lists.isEmpty(sessions)}"><td colspan="6">No sessions</td></tr>
-            <tr th:each="session : ${sessions}">
-                <td th:text="${session.id}"></td>
-                <td th:text="${session.staffUsername}"></td>
-                <td th:text="${session.status}"></td>
+            <tr th:each="svcSession : ${sessions}">
+                <td th:text="${svcSession.id}"></td>
+                <td th:text="${svcSession.staffUsername}"></td>
+                <td th:text="${svcSession.status}"></td>
                 <td>
-                    <span th:if="${assignedBySession[session.id] != null}" th:text="${assignedBySession[session.id].id + ' - ' + assignedBySession[session.id].customerName}"></span>
-                    <span th:if="${assignedBySession[session.id] == null}">None</span>
+                    <span th:if="${assignedBySession[svcSession.id] != null}" th:text="${assignedBySession[svcSession.id].id + ' - ' + assignedBySession[svcSession.id].customerName}"></span>
+                    <span th:if="${assignedBySession[svcSession.id] == null}">None</span>
                 </td>
-                <td th:text="${session.currentStateName}"></td>
+                <td th:text="${svcSession.currentStateName}"></td>
                 <td>
-                    <form th:if="${session.status.name() == 'IDLE'}" th:action="@{/staff/sessions/{id}/activate(id=${session.id})}" method="post">
+                    <form th:if="${svcSession.status.name() == 'IDLE'}" th:action="@{/staff/sessions/{id}/activate(id=${svcSession.id})}" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                         <button type="submit">Activate</button>
                     </form>
-                    <form th:if="${session.status.name() == 'ACTIVE'}" th:action="@{/staff/sessions/{id}/start-next(id=${session.id})}" method="post">
+                    <form th:if="${svcSession.status.name() == 'ACTIVE'}" th:action="@{/staff/sessions/{id}/start-next(id=${svcSession.id})}" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                         <button type="submit">Start Next Queue</button>
                     </form>
-                    <form th:if="${assignedBySession[session.id] != null}" th:action="@{/staff/sessions/{id}/complete-current(id=${session.id})}" method="post">
+                    <form th:if="${assignedBySession[svcSession.id] != null}" th:action="@{/staff/sessions/{id}/complete-current(id=${svcSession.id})}" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                         <button class="alt" type="submit">Complete Assigned</button>
                     </form>
-                    <form th:if="${session.status.name() == 'ACTIVE'}" th:action="@{/staff/sessions/{id}/pause(id=${session.id})}" method="post">
+                    <form th:if="${svcSession.status.name() == 'ACTIVE'}" th:action="@{/staff/sessions/{id}/pause(id=${svcSession.id})}" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                         <button class="alt" type="submit">Pause</button>
                     </form>
-                    <form th:if="${session.status.name() == 'PAUSED'}" th:action="@{/staff/sessions/{id}/resume(id=${session.id})}" method="post">
+                    <form th:if="${svcSession.status.name() == 'PAUSED'}" th:action="@{/staff/sessions/{id}/resume(id=${svcSession.id})}" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                         <button class="warn" type="submit">Resume</button>
                     </form>
-                    <form th:if="${session.status.name() == 'ACTIVE' || session.status.name() == 'PAUSED'}" th:action="@{/staff/sessions/{id}/complete(id=${session.id})}" method="post">
+                    <form th:if="${svcSession.status.name() == 'ACTIVE' || svcSession.status.name() == 'PAUSED'}" th:action="@{/staff/sessions/{id}/complete(id=${svcSession.id})}" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                         <button class="warn" type="submit">Complete</button>
                     </form>
                 </td>

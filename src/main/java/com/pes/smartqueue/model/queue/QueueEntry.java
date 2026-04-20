@@ -69,6 +69,11 @@ public class QueueEntry {
         currentState.cancel(this);
     }
 
+    public void releaseToWaiting() {
+        hydrateState();
+        currentState.releaseToWaiting(this);
+    }
+
     public void transitionTo(QueueState nextState, QueueStatus nextStatus) {
         this.currentState = nextState;
         this.status = nextStatus;

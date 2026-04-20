@@ -82,14 +82,30 @@ public class ServiceSessionService {
         return completed;
     }
 
-    @Transactional(readOnly = true)
+    public void releaseAssignedQueueEntry(long id) {
+        ServiceSession session = require(id);
+        Long queueEntryId = session.getActiveQueueEntryId();
+        if (queueEntryId == null) {
+            throw new InvalidServiceSessionTransitionException("No assigned queue entry for this session");
+        }
+        queueService.requeueEntry(queueEntryId);
+        session.clearQueueEntry();
+        serviceSessionRepository.save(session);
+    }
+
     public QueueEntry getAssignedQueueEntry(long id) {
         ServiceSession session = require(id);
         Long queueEntryId = session.getActiveQueueEntryId();
         if (queueEntryId == null) {
             return null;
         }
-        return queueService.getById(queueEntryId);
+        QueueEntry assigned = queueService.findByIdOrNull(queueEntryId);
+        if (assigned == null) {
+            session.clearQueueEntry();
+            serviceSessionRepository.save(session);
+            return null;
+        }
+        return assigned;
     }
 
     @Transactional(readOnly = true)

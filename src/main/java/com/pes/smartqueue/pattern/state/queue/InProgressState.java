@@ -21,6 +21,11 @@ public class InProgressState implements QueueState {
     }
 
     @Override
+    public void releaseToWaiting(QueueEntry context) {
+        context.transitionTo(new WaitingState(), QueueStatus.WAITING);
+    }
+
+    @Override
     public String name() {
         return "IN_PROGRESS";
     }

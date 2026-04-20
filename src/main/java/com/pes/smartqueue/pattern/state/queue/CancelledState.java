@@ -20,6 +20,11 @@ public class CancelledState implements QueueState {
     }
 
     @Override
+    public void releaseToWaiting(QueueEntry context) {
+        throw new InvalidQueueTransitionException("Cannot release CANCELLED entry back to WAITING");
+    }
+
+    @Override
     public String name() {
         return "CANCELLED";
     }

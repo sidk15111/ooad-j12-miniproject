@@ -9,5 +9,7 @@ public interface QueueState {
 
     void cancel(QueueEntry context);
 
+    void releaseToWaiting(QueueEntry context);
+
     String name();
 }

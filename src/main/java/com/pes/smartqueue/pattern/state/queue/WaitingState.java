@@ -21,6 +21,11 @@ public class WaitingState implements QueueState {
     }
 
     @Override
+    public void releaseToWaiting(QueueEntry context) {
+        throw new InvalidQueueTransitionException("Entry is already WAITING");
+    }
+
+    @Override
     public String name() {
         return "WAITING";
     }

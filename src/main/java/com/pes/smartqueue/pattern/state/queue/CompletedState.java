@@ -20,6 +20,11 @@ public class CompletedState implements QueueState {
     }
 
     @Override
+    public void releaseToWaiting(QueueEntry context) {
+        throw new InvalidQueueTransitionException("Cannot release COMPLETED entry back to WAITING");
+    }
+
+    @Override
     public String name() {
         return "COMPLETED";
     }

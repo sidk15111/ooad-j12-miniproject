@@ -140,4 +140,27 @@ class WorkflowEndToEndIntegrationTest {
         assertEquals(ServiceSessionStatus.ACTIVE, updatedSession.getStatus());
         assertNull(updatedSession.getActiveQueueEntryId());
     }
+
+    @Test
+    void createSession_redirectDoesNotCrashWhenAnotherSessionHasStaleQueueReference() throws Exception {
+        ServiceSession stale = new ServiceSession("legacy-staff");
+        stale.activate();
+        stale.assignQueueEntry(99999L);
+        serviceSessionRepository.save(stale);
+
+        mockMvc.perform(post("/staff/sessions")
+                .with(csrf())
+                .with(user("staff").roles("SERVICE_STAFF"))
+                .param("staffUsername", "fresh-staff"))
+            .andExpect(status().is3xxRedirection());
+
+        mockMvc.perform(get("/staff/sessions")
+                .with(user("staff").roles("SERVICE_STAFF")))
+            .andExpect(status().isOk())
+            .andExpect(model().attribute("sessions", hasSize(2)));
+
+        ServiceSession staleReloaded = serviceSessionRepository.findById(stale.getId()).orElseThrow();
+        assertEquals(ServiceSessionStatus.ACTIVE, staleReloaded.getStatus());
+        assertNull(staleReloaded.getActiveQueueEntryId());
+    }
 }
