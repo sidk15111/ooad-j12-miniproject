@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reception Queue Desk</title>
+    <style>
+        :root {
+            --bg: #f9f5ef;
+            --card: #ffffff;
+            --ink: #1f2937;
+            --muted: #6b7280;
+            --accent: #0f766e;
+            --accent-soft: #d9f3ef;
+            --danger: #b91c1c;
+            --ok: #065f46;
+            --line: #e5e7eb;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Trebuchet MS", "Gill Sans", sans-serif;
+            background: linear-gradient(160deg, #f8f4ea 0%, #eaf8f1 45%, #eef4fc 100%);
+            color: var(--ink);
+            min-height: 100vh;
+        }
+        .container {
+            width: min(1200px, 95vw);
+            margin: 22px auto;
+            display: grid;
+            gap: 18px;
+        }
+        .panel {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 18px;
+            box-shadow: 0 12px 22px rgba(15, 23, 42, 0.06);
+        }
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+        }
+        h1, h2 {
+            margin: 0 0 10px;
+        }
+        form {
+            display: inline-flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        input, select, button {
+            font: inherit;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            background: #fff;
+        }
+        button {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        button.alt { background: #334155; }
+        button.warn { background: var(--danger); }
+        .msg {
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .msg.ok { background: #d1fae5; color: var(--ok); }
+        .msg.err { background: #fee2e2; color: var(--danger); }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+        }
+        th, td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid var(--line);
+            font-size: 0.95rem;
+        }
+        .muted { color: var(--muted); font-size: 0.9rem; }
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .top-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .ghost {
+            text-decoration: none;
+            border: 1px solid #cbd5e1;
+            color: #0f172a;
+            background: #fff;
+            padding: 7px 10px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+        @media (max-width: 760px) {
+            th:nth-child(3), td:nth-child(3),
+            th:nth-child(5), td:nth-child(5) {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <section class="panel">
+        <div class="topbar">
+            <div>
+                <h1>Reception Queue Desk</h1>
+                <p class="muted">Active strategy: <strong th:text="${activeStrategy}">APPOINTMENT_PRIORITY</strong></p>
+            </div>
+            <div class="top-actions">
+                <a class="ghost" th:href="@{/}">Home</a>
+                <form th:action="@{/logout}" method="post">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <button class="alt" type="submit">Logout</button>
+                </form>
+            </div>
+        </div>
+
+        <div th:if="${success}" class="msg ok" th:text="${success}"></div>
+        <div th:if="${error}" class="msg err" th:text="${error}"></div>
+
+        <div class="row">
+            <form th:action="@{/reception/queue}" method="post">
+                <input type="text" name="customerName" placeholder="Customer name" required>
+                <select name="type" required>
+                    <option th:each="entryType : ${entryTypes}"
+                            th:value="${entryType}"
+                            th:text="${entryType}">
+                    </option>
+                </select>
+                <button type="submit">Add Entry</button>
+            </form>
+
+            <form th:action="@{/reception/queue/start-next}" method="post">
+                <button class="alt" type="submit">Start Next</button>
+            </form>
+
+            <form th:action="@{/reception/queue/strategy}" method="post">
+                <select name="strategy">
+                    <option th:each="strategy : ${strategies}"
+                            th:value="${strategy}"
+                            th:selected="${strategy == activeStrategy}"
+                            th:text="${strategy}">
+                    </option>
+                </select>
+                <button type="submit">Change Strategy</button>
+            </form>
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2>Checked-In Appointments Ready For Queue</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>Appointment ID</th>
+                <th>Customer</th>
+                <th>Slot Time</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${#lists.isEmpty(checkedInAppointments)}">
+                <td colspan="5">No checked-in appointments pending queue intake</td>
+            </tr>
+            <tr th:each="appointment : ${checkedInAppointments}">
+                <td th:text="${appointment.id}"></td>
+                <td th:text="${appointment.customerName}"></td>
+                <td th:text="${appointment.slotTime}"></td>
+                <td th:text="${appointment.status}"></td>
+                <td>
+                    <form th:action="@{/reception/queue/from-appointment/{id}(id=${appointment.id})}" method="post">
+                        <button type="submit">Add To Queue</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section class="panel">
+        <h2>Ordered Active Queue</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Customer</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>State Object</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${#lists.isEmpty(orderedQueue)}">
+                <td colspan="5">No active entries</td>
+            </tr>
+            <tr th:each="entry : ${orderedQueue}">
+                <td th:text="${entry.id}"></td>
+                <td th:text="${entry.customerName}"></td>
+                <td th:text="${entry.type}"></td>
+                <td th:text="${entry.status}"></td>
+                <td th:text="${entry.currentStateName}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section class="panel">
+        <h2>All Entries</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Customer</th>
+                <th>Type</th>
+                <th>Appt Ref</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${#lists.isEmpty(entries)}">
+                <td colspan="6">No entries created yet</td>
+            </tr>
+            <tr th:each="entry : ${entries}">
+                <td th:text="${entry.id}"></td>
+                <td th:text="${entry.customerName}"></td>
+                <td th:text="${entry.type}"></td>
+                <td th:text="${entry.sourceAppointmentId}"></td>
+                <td th:text="${entry.status}"></td>
+                <td>
+                    <form th:if="${entry.status.name() == 'WAITING'}" th:action="@{/reception/queue/{id}/start(id=${entry.id})}" method="post">
+                        <button type="submit">Start</button>
+                    </form>
+                    <form th:if="${entry.status.name() == 'IN_PROGRESS'}" th:action="@{/reception/queue/{id}/complete(id=${entry.id})}" method="post">
+                        <button class="alt" type="submit">Complete</button>
+                    </form>
+                    <form th:if="${entry.status.name() == 'WAITING' || entry.status.name() == 'IN_PROGRESS'}" th:action="@{/reception/queue/{id}/cancel(id=${entry.id})}" method="post">
+                        <button class="warn" type="submit">Cancel</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+</div>
+</body>
+</html>

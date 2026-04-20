@@ -1,10 +1,10 @@
 package com.pes.smartqueue.model.session;
 
-import com.pes.smartqueue.pattern.state.session.IdleServiceSessionState;
+import com.pes.smartqueue.pattern.state.session.IdleSessionState;
 import com.pes.smartqueue.pattern.state.session.ServiceSessionState;
-import com.pes.smartqueue.pattern.state.session.ActiveServiceSessionState;
-import com.pes.smartqueue.pattern.state.session.CompletedServiceSessionState;
-import com.pes.smartqueue.pattern.state.session.PausedServiceSessionState;
+import com.pes.smartqueue.pattern.state.session.ActiveSessionState;
+import com.pes.smartqueue.pattern.state.session.CompletedSessionState;
+import com.pes.smartqueue.pattern.state.session.PausedSessionState;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -98,15 +98,15 @@ public class ServiceSession {
     @PostLoad
     public void hydrateState() {
         if (status == null || status == ServiceSessionStatus.IDLE) {
-            currentState = new IdleServiceSessionState();
+            currentState = new IdleSessionState();
             status = ServiceSessionStatus.IDLE;
             return;
         }
         switch (status) {
-            case ACTIVE -> currentState = new ActiveServiceSessionState();
-            case PAUSED -> currentState = new PausedServiceSessionState();
-            case COMPLETED -> currentState = new CompletedServiceSessionState();
-            case IDLE -> currentState = new IdleServiceSessionState();
+            case ACTIVE -> currentState = new ActiveSessionState();
+            case PAUSED -> currentState = new PausedSessionState();
+            case COMPLETED -> currentState = new CompletedSessionState();
+            case IDLE -> currentState = new IdleSessionState();
             default -> throw new IllegalStateException("Unhandled service session state: " + status);
         }
     }
