@@ -333,4 +333,3 @@ Service classes are annotated transactional to guarantee consistency across mult
 - Container files: Dockerfile, docker-compose.yml
 
 ---
-This README is intentionally deep to support software engineers reviewing architecture decisions, design pattern mapping, and lifecycle/workflow implementation in an OOAD context.
