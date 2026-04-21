@@ -53,6 +53,18 @@ public class UserManagementService {
         users.put(username, new ManagedUserProfile(username, password, normalizedRole, true));
     }
 
+    public boolean isUserActive(String username) {
+        ManagedUserProfile profile = users.get(username);
+        if (profile == null) {
+            return true;
+        }
+        return profile.isActive();
+    }
+
+    public void resetSeedUsersToActive() {
+        users.values().forEach(profile -> profile.setActive(true));
+    }
+
     private ManagedUserProfile require(String username) {
         ManagedUserProfile profile = users.get(username);
         if (profile == null) {

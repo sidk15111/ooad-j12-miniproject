@@ -10,10 +10,16 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 public class SecurityConfig {
+    private final ActiveUserFilter activeUserFilter;
+
+    public SecurityConfig(ActiveUserFilter activeUserFilter) {
+        this.activeUserFilter = activeUserFilter;
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -26,6 +32,7 @@ public class SecurityConfig {
                 .requestMatchers("/staff/**").hasAnyRole("SERVICE_STAFF", "ADMIN")
                 .anyRequest().authenticated())
             .exceptionHandling(ex -> ex.accessDeniedPage("/access-denied"))
+            .addFilterAfter(activeUserFilter, AnonymousAuthenticationFilter.class)
             .formLogin(Customizer.withDefaults())
             .logout(Customizer.withDefaults());
         return http.build();

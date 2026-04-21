@@ -1,4 +1,5 @@
 /workspace/src/main/java/com/pes/smartqueue/SmartQueueApplication.java
+/workspace/src/main/java/com/pes/smartqueue/config/ActiveUserFilter.java
 /workspace/src/main/java/com/pes/smartqueue/config/SecurityConfig.java
 /workspace/src/main/java/com/pes/smartqueue/controller/AdminController.java
 /workspace/src/main/java/com/pes/smartqueue/controller/CustomerController.java

@@ -14,6 +14,7 @@ import com.pes.smartqueue.repository.ServiceSessionRepository;
 import com.pes.smartqueue.service.AppointmentService;
 import com.pes.smartqueue.service.QueueService;
 import com.pes.smartqueue.service.ServiceSessionService;
+import com.pes.smartqueue.service.UserManagementService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,11 +70,24 @@ class ServiceRulesIntegrationTest {
     @Autowired
     private ServiceSessionRepository serviceSessionRepository;
 
+    @Autowired
+    private UserManagementService userManagementService;
+
     @BeforeEach
     void cleanDb() {
         serviceSessionRepository.deleteAll();
         queueEntryRepository.deleteAll();
         appointmentRepository.deleteAll();
+        userManagementService.resetSeedUsersToActive();
+    }
+
+    @Test
+    void deactivatedCustomer_isBlockedFromCustomerPage() throws Exception {
+        userManagementService.deactivate("customer");
+
+        mockMvc.perform(get("/customer/appointments")
+                .with(SecurityMockMvcRequestPostProcessors.user("customer").roles("CUSTOMER")))
+            .andExpect(status().is3xxRedirection());
     }
 
     @Test

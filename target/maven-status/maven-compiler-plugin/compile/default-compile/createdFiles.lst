@@ -24,6 +24,7 @@ com/pes/smartqueue/model/session/ServiceSession$1.class
 com/pes/smartqueue/service/MetricsService.class
 com/pes/smartqueue/controller/AdminController.class
 com/pes/smartqueue/pattern/state/appointment/ExpiredAppointmentState.class
+com/pes/smartqueue/config/ActiveUserFilter.class
 com/pes/smartqueue/pattern/state/appointment/CancelledAppointmentState.class
 com/pes/smartqueue/model/session/ServiceSessionStatus.class
 com/pes/smartqueue/exception/InvalidAppointmentTransitionException.class
