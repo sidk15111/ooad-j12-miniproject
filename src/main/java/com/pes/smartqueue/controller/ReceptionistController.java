@@ -75,6 +75,11 @@ public class ReceptionistController {
         return transition(() -> queueService.cancelEntry(id), "Entry moved to CANCELLED", redirectAttributes);
     }
 
+    @PostMapping("/queue/{id}/no-show")
+    public String markNoShowById(@PathVariable long id, RedirectAttributes redirectAttributes) {
+        return transition(() -> queueService.markNoShow(id), "Entry moved to NO_SHOW", redirectAttributes);
+    }
+
     @PostMapping("/queue/strategy")
     public String changeStrategy(@RequestParam String strategy,
                                  RedirectAttributes redirectAttributes) {
@@ -96,7 +101,8 @@ public class ReceptionistController {
                 throw new IllegalStateException("Appointment is not CHECKED_IN yet");
             }
             queueService.addAppointmentEntry(appointment.getId(), appointment.getCustomerName());
-            redirectAttributes.addFlashAttribute("success", "Checked-in appointment added to queue");
+            appointmentService.complete(appointment.getId());
+            redirectAttributes.addFlashAttribute("success", "Checked-in appointment added to queue and marked COMPLETED");
         } catch (RuntimeException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
         }

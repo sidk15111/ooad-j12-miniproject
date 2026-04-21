@@ -20,6 +20,7 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/css/**").authenticated()
+                .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/reception/**").hasAnyRole("RECEPTIONIST", "ADMIN")
                 .requestMatchers("/customer/**").hasAnyRole("CUSTOMER", "ADMIN")
                 .requestMatchers("/staff/**").hasAnyRole("SERVICE_STAFF", "ADMIN")

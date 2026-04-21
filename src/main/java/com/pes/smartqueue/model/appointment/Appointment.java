@@ -3,9 +3,11 @@ package com.pes.smartqueue.model.appointment;
 import com.pes.smartqueue.pattern.state.appointment.AppointmentState;
 import com.pes.smartqueue.pattern.state.appointment.CancelledAppointmentState;
 import com.pes.smartqueue.pattern.state.appointment.CheckedInAppointmentState;
+import com.pes.smartqueue.pattern.state.appointment.CompletedAppointmentState;
 import com.pes.smartqueue.pattern.state.appointment.ConfirmedAppointmentState;
 import com.pes.smartqueue.pattern.state.appointment.CreatedAppointmentState;
 import com.pes.smartqueue.pattern.state.appointment.ExpiredAppointmentState;
+import com.pes.smartqueue.pattern.state.appointment.RescheduledAppointmentState;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -49,9 +51,19 @@ public class Appointment {
         currentState.confirm(this);
     }
 
+    public void reschedule() {
+        hydrateState();
+        currentState.reschedule(this);
+    }
+
     public void checkIn() {
         hydrateState();
         currentState.checkIn(this);
+    }
+
+    public void complete() {
+        hydrateState();
+        currentState.complete(this);
     }
 
     public void cancel() {
@@ -78,7 +90,9 @@ public class Appointment {
         }
         switch (status) {
             case CONFIRMED -> currentState = new ConfirmedAppointmentState();
+            case RESCHEDULED -> currentState = new RescheduledAppointmentState();
             case CHECKED_IN -> currentState = new CheckedInAppointmentState();
+            case COMPLETED -> currentState = new CompletedAppointmentState();
             case CANCELLED -> currentState = new CancelledAppointmentState();
             case EXPIRED -> currentState = new ExpiredAppointmentState();
             case CREATED -> currentState = new CreatedAppointmentState();
@@ -96,6 +110,10 @@ public class Appointment {
 
     public LocalDateTime getSlotTime() {
         return slotTime;
+    }
+
+    public void setSlotTime(LocalDateTime slotTime) {
+        this.slotTime = slotTime;
     }
 
     public AppointmentStatus getStatus() {

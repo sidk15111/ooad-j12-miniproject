@@ -11,8 +11,18 @@ public class CreatedAppointmentState implements AppointmentState {
     }
 
     @Override
+    public void reschedule(Appointment context) {
+        throw new InvalidAppointmentTransitionException("Cannot reschedule before confirmation");
+    }
+
+    @Override
     public void checkIn(Appointment context) {
         throw new InvalidAppointmentTransitionException("Cannot check in before confirmation");
+    }
+
+    @Override
+    public void complete(Appointment context) {
+        throw new InvalidAppointmentTransitionException("Cannot complete before check-in");
     }
 
     @Override

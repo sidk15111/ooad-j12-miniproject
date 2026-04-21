@@ -9,5 +9,7 @@ import java.util.List;
 public interface ServiceSessionRepository extends JpaRepository<ServiceSession, Long> {
     List<ServiceSession> findAllByOrderByIdAsc();
 
+    long countByStatus(ServiceSessionStatus status);
+
     boolean existsByStaffUsernameAndStatusAndIdNot(String staffUsername, ServiceSessionStatus status, Long id);
 }

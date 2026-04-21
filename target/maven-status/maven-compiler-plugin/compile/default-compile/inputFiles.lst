@@ -1,5 +1,6 @@
 /workspace/src/main/java/com/pes/smartqueue/SmartQueueApplication.java
 /workspace/src/main/java/com/pes/smartqueue/config/SecurityConfig.java
+/workspace/src/main/java/com/pes/smartqueue/controller/AdminController.java
 /workspace/src/main/java/com/pes/smartqueue/controller/CustomerController.java
 /workspace/src/main/java/com/pes/smartqueue/controller/HomeController.java
 /workspace/src/main/java/com/pes/smartqueue/controller/ReceptionistController.java
@@ -17,12 +18,15 @@
 /workspace/src/main/java/com/pes/smartqueue/pattern/state/appointment/AppointmentState.java
 /workspace/src/main/java/com/pes/smartqueue/pattern/state/appointment/CancelledAppointmentState.java
 /workspace/src/main/java/com/pes/smartqueue/pattern/state/appointment/CheckedInAppointmentState.java
+/workspace/src/main/java/com/pes/smartqueue/pattern/state/appointment/CompletedAppointmentState.java
 /workspace/src/main/java/com/pes/smartqueue/pattern/state/appointment/ConfirmedAppointmentState.java
 /workspace/src/main/java/com/pes/smartqueue/pattern/state/appointment/CreatedAppointmentState.java
 /workspace/src/main/java/com/pes/smartqueue/pattern/state/appointment/ExpiredAppointmentState.java
+/workspace/src/main/java/com/pes/smartqueue/pattern/state/appointment/RescheduledAppointmentState.java
 /workspace/src/main/java/com/pes/smartqueue/pattern/state/queue/CancelledState.java
 /workspace/src/main/java/com/pes/smartqueue/pattern/state/queue/CompletedState.java
 /workspace/src/main/java/com/pes/smartqueue/pattern/state/queue/InProgressState.java
+/workspace/src/main/java/com/pes/smartqueue/pattern/state/queue/NoShowState.java
 /workspace/src/main/java/com/pes/smartqueue/pattern/state/queue/QueueState.java
 /workspace/src/main/java/com/pes/smartqueue/pattern/state/queue/WaitingState.java
 /workspace/src/main/java/com/pes/smartqueue/pattern/state/session/ActiveSessionState.java
@@ -37,5 +41,9 @@
 /workspace/src/main/java/com/pes/smartqueue/repository/QueueEntryRepository.java
 /workspace/src/main/java/com/pes/smartqueue/repository/ServiceSessionRepository.java
 /workspace/src/main/java/com/pes/smartqueue/service/AppointmentService.java
+/workspace/src/main/java/com/pes/smartqueue/service/MetricsService.java
 /workspace/src/main/java/com/pes/smartqueue/service/QueueService.java
+/workspace/src/main/java/com/pes/smartqueue/service/ReportService.java
 /workspace/src/main/java/com/pes/smartqueue/service/ServiceSessionService.java
+/workspace/src/main/java/com/pes/smartqueue/service/SystemConfigService.java
+/workspace/src/main/java/com/pes/smartqueue/service/UserManagementService.java

@@ -15,6 +15,11 @@ public class CompletedState implements QueueState {
     }
 
     @Override
+    public void markNoShow(QueueEntry context) {
+        throw new InvalidQueueTransitionException("Cannot mark COMPLETED entry as NO_SHOW");
+    }
+
+    @Override
     public void cancel(QueueEntry context) {
         throw new InvalidQueueTransitionException("Cannot cancel from COMPLETED state");
     }

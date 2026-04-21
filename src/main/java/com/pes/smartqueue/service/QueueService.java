@@ -7,6 +7,7 @@ import com.pes.smartqueue.model.queue.QueueStatus;
 import com.pes.smartqueue.pattern.strategy.QueueOrderingStrategy;
 import com.pes.smartqueue.repository.QueueEntryRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
@@ -61,6 +62,7 @@ public class QueueService {
         return queueEntryRepository.findAllByOrderByArrivalTimeAsc();
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public synchronized QueueEntry startNext() {
         QueueEntry next = getOrderedQueue().stream()
             .filter(entry -> entry.getStatus() == QueueStatus.WAITING)
@@ -91,6 +93,12 @@ public class QueueService {
     public void cancelEntry(long id) {
         QueueEntry entry = requireEntry(id);
         entry.cancel();
+        queueEntryRepository.save(entry);
+    }
+
+    public void markNoShow(long id) {
+        QueueEntry entry = requireEntry(id);
+        entry.markNoShow();
         queueEntryRepository.save(entry);
     }
 

@@ -35,6 +35,19 @@ public class AppointmentService {
         appointmentRepository.save(appointment);
     }
 
+    public void reschedule(long id, LocalDateTime newSlotTime) {
+        Appointment appointment = require(id);
+        appointment.reschedule();
+        appointment.setSlotTime(newSlotTime);
+        appointmentRepository.save(appointment);
+    }
+
+    public void complete(long id) {
+        Appointment appointment = require(id);
+        appointment.complete();
+        appointmentRepository.save(appointment);
+    }
+
     public void cancel(long id) {
         Appointment appointment = require(id);
         appointment.cancel();
@@ -43,7 +56,11 @@ public class AppointmentService {
 
     public void expirePastDue() {
         LocalDateTime now = LocalDateTime.now();
-        List<AppointmentStatus> activeStatuses = List.of(AppointmentStatus.CREATED, AppointmentStatus.CONFIRMED);
+        List<AppointmentStatus> activeStatuses = List.of(
+            AppointmentStatus.CREATED,
+            AppointmentStatus.CONFIRMED,
+            AppointmentStatus.RESCHEDULED
+        );
         List<Appointment> toExpire = appointmentRepository.findByStatusInAndSlotTimeBefore(activeStatuses, now.minusMinutes(30));
         for (Appointment appointment : toExpire) {
             appointment.expire();

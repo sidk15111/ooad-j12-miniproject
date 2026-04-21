@@ -15,6 +15,11 @@ public class CancelledState implements QueueState {
     }
 
     @Override
+    public void markNoShow(QueueEntry context) {
+        throw new InvalidQueueTransitionException("Cannot mark CANCELLED entry as NO_SHOW");
+    }
+
+    @Override
     public void cancel(QueueEntry context) {
         throw new InvalidQueueTransitionException("Entry is already CANCELLED");
     }

@@ -16,6 +16,11 @@ public class WaitingState implements QueueState {
     }
 
     @Override
+    public void markNoShow(QueueEntry context) {
+        context.transitionTo(new NoShowState(), QueueStatus.NO_SHOW);
+    }
+
+    @Override
     public void cancel(QueueEntry context) {
         context.transitionTo(new CancelledState(), QueueStatus.CANCELLED);
     }

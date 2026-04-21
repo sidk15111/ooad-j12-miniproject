@@ -2,6 +2,7 @@ package com.pes.smartqueue.pattern.state.appointment;
 
 import com.pes.smartqueue.exception.InvalidAppointmentTransitionException;
 import com.pes.smartqueue.model.appointment.Appointment;
+import com.pes.smartqueue.model.appointment.AppointmentStatus;
 
 public class CheckedInAppointmentState implements AppointmentState {
     @Override
@@ -10,8 +11,18 @@ public class CheckedInAppointmentState implements AppointmentState {
     }
 
     @Override
+    public void reschedule(Appointment context) {
+        throw new InvalidAppointmentTransitionException("Cannot reschedule checked-in appointment");
+    }
+
+    @Override
     public void checkIn(Appointment context) {
         throw new InvalidAppointmentTransitionException("Appointment already checked in");
+    }
+
+    @Override
+    public void complete(Appointment context) {
+        context.transitionTo(new CompletedAppointmentState(), AppointmentStatus.COMPLETED);
     }
 
     @Override
