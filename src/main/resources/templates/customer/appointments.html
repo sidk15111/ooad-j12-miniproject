@@ -77,6 +77,14 @@
                         <button class="warn" type="submit">Cancel</button>
                     </form>
                 </td>
+                <td th:if="${appointment.status.name() == 'CONFIRMED' || appointment.status.name() == 'RESCHEDULED'}">
+                    <form th:action="@{/customer/appointments/{id}/reschedule(id=${appointment.id})}" method="post"
+                        style="display:inline-flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <input type="datetime-local" name="newSlotTime" required>
+                        <button type="submit">Reschedule</button>
+                    </form>
+                </td>
             </tr>
             </tbody>
         </table>

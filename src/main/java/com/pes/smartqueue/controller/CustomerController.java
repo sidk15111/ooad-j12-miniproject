@@ -63,6 +63,21 @@ public class CustomerController {
         return transition(() -> appointmentService.cancel(id), "Appointment cancelled", redirectAttributes);
     }
 
+    @PostMapping("/appointments/{id}/reschedule")
+    public String reschedule(Authentication authentication,
+                            @PathVariable long id,
+                            @RequestParam String newSlotTime,
+                            RedirectAttributes redirectAttributes) {
+        if (!isOwner(authentication.getName(), id, redirectAttributes)) {
+            return "redirect:/customer/appointments";
+        }
+        return transition(
+            () -> appointmentService.reschedule(id, LocalDateTime.parse(newSlotTime)),
+            "Appointment rescheduled — please confirm your new slot",
+            redirectAttributes
+        );
+    }
+
     private boolean isOwner(String username, long appointmentId, RedirectAttributes redirectAttributes) {
         Appointment appointment = appointmentService.get(appointmentId);
         if (!username.equals(appointment.getCustomerName())) {
