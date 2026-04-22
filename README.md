@@ -67,7 +67,6 @@ Requires Docker and Docker Compose. No local Java or MySQL installation needed.
 ```bash
 git clone https://github.com/sidk15111/ooad-j12-miniproject.git
 cd ooad-j12-miniproject
-git checkout v2
 docker compose up --build
 ```
 
