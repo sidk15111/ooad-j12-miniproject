@@ -74,6 +74,16 @@ public class AppointmentService {
     }
 
     @Transactional(readOnly = true)
+    public List<Appointment> listByCustomerName(String customerName) {
+        return appointmentRepository.findByCustomerNameOrderBySlotTimeAsc(customerName);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Appointment> listConfirmed() {
+        return appointmentRepository.findByStatusOrderBySlotTimeAsc(AppointmentStatus.CONFIRMED);
+    }
+
+    @Transactional(readOnly = true)
     public List<Appointment> listCheckedIn() {
         return appointmentRepository.findByStatusOrderBySlotTimeAsc(AppointmentStatus.CHECKED_IN);
     }

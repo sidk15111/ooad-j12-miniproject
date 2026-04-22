@@ -1,15 +1,13 @@
 package com.pes.smartqueue.config;
 
+import com.pes.smartqueue.service.UserManagementService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -25,7 +23,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/css/**").authenticated()
+                .requestMatchers("/login", "/register/customer", "/access-denied", "/css/**").permitAll()
+                .requestMatchers("/").authenticated()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/reception/**").hasAnyRole("RECEPTIONIST", "ADMIN")
                 .requestMatchers("/customer/**").hasAnyRole("CUSTOMER", "ADMIN")
@@ -33,34 +32,27 @@ public class SecurityConfig {
                 .anyRequest().authenticated())
             .exceptionHandling(ex -> ex.accessDeniedPage("/access-denied"))
             .addFilterAfter(activeUserFilter, AnonymousAuthenticationFilter.class)
-            .formLogin(Customizer.withDefaults())
+            .formLogin(form -> form
+                .loginPage("/login")
+                .defaultSuccessUrl("/", true)
+                .permitAll())
             .logout(Customizer.withDefaults());
         return http.build();
     }
 
     @Bean
-    public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
-        UserDetails receptionist = User.withUsername("reception")
-            .password(passwordEncoder.encode("reception123"))
-            .roles("RECEPTIONIST")
-            .build();
-
-        UserDetails admin = User.withUsername("admin")
-            .password(passwordEncoder.encode("admin123"))
-            .roles("ADMIN")
-            .build();
-
-        UserDetails customer = User.withUsername("customer")
-            .password(passwordEncoder.encode("customer123"))
-            .roles("CUSTOMER")
-            .build();
-
-        UserDetails staff = User.withUsername("staff")
-            .password(passwordEncoder.encode("staff123"))
-            .roles("SERVICE_STAFF")
-            .build();
-
-        return new InMemoryUserDetailsManager(receptionist, admin, customer, staff);
+    public UserDetailsService userDetailsService(UserManagementService userManagementService) {
+        return username -> {
+            UserManagementService.ManagedUserProfile profile = userManagementService.findByUsername(username);
+            if (profile == null) {
+                throw new org.springframework.security.core.userdetails.UsernameNotFoundException("User not found: " + username);
+            }
+            return org.springframework.security.core.userdetails.User.withUsername(profile.getUsername())
+                .password(profile.getPassword())
+                .roles(profile.getRole())
+                .disabled(!profile.isActive())
+                .build();
+        };
     }
 
     @Bean

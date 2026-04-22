@@ -1,6 +1,8 @@
 package com.pes.smartqueue.controller;
 
+import com.pes.smartqueue.model.appointment.Appointment;
 import com.pes.smartqueue.service.AppointmentService;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,18 +24,18 @@ public class CustomerController {
     }
 
     @GetMapping("/appointments")
-    public String appointments(Model model) {
+    public String appointments(Authentication authentication, Model model) {
         appointmentService.expirePastDue();
-        model.addAttribute("appointments", appointmentService.list());
+        model.addAttribute("appointments", appointmentService.listByCustomerName(authentication.getName()));
         return "customer/appointments";
     }
 
     @PostMapping("/appointments")
-    public String create(@RequestParam String customerName,
+    public String create(Authentication authentication,
                          @RequestParam String slotTime,
                          RedirectAttributes redirectAttributes) {
         try {
-            appointmentService.create(customerName, LocalDateTime.parse(slotTime));
+            appointmentService.create(authentication.getName(), LocalDateTime.parse(slotTime));
             redirectAttributes.addFlashAttribute("success", "Appointment created");
         } catch (RuntimeException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
@@ -42,18 +44,32 @@ public class CustomerController {
     }
 
     @PostMapping("/appointments/{id}/confirm")
-    public String confirm(@PathVariable long id, RedirectAttributes redirectAttributes) {
+    public String confirm(Authentication authentication,
+                          @PathVariable long id,
+                          RedirectAttributes redirectAttributes) {
+        if (!isOwner(authentication.getName(), id, redirectAttributes)) {
+            return "redirect:/customer/appointments";
+        }
         return transition(() -> appointmentService.confirm(id), "Appointment confirmed", redirectAttributes);
     }
 
-    @PostMapping("/appointments/{id}/checkin")
-    public String checkIn(@PathVariable long id, RedirectAttributes redirectAttributes) {
-        return transition(() -> appointmentService.checkIn(id), "Appointment checked in", redirectAttributes);
+    @PostMapping("/appointments/{id}/cancel")
+    public String cancel(Authentication authentication,
+                         @PathVariable long id,
+                         RedirectAttributes redirectAttributes) {
+        if (!isOwner(authentication.getName(), id, redirectAttributes)) {
+            return "redirect:/customer/appointments";
+        }
+        return transition(() -> appointmentService.cancel(id), "Appointment cancelled", redirectAttributes);
     }
 
-    @PostMapping("/appointments/{id}/cancel")
-    public String cancel(@PathVariable long id, RedirectAttributes redirectAttributes) {
-        return transition(() -> appointmentService.cancel(id), "Appointment cancelled", redirectAttributes);
+    private boolean isOwner(String username, long appointmentId, RedirectAttributes redirectAttributes) {
+        Appointment appointment = appointmentService.get(appointmentId);
+        if (!username.equals(appointment.getCustomerName())) {
+            redirectAttributes.addFlashAttribute("error", "You can only manage your own appointments");
+            return false;
+        }
+        return true;
     }
 
     private String transition(Runnable transitionAction, String successMessage,

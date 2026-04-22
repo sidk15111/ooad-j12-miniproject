@@ -9,8 +9,10 @@ import com.pes.smartqueue.repository.ServiceSessionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -41,7 +43,7 @@ public class MetricsService {
 
     public Map<String, Long> getAppointmentStatusBreakdown() {
         Map<String, Long> breakdown = new LinkedHashMap<>();
-        for (AppointmentStatus status : AppointmentStatus.values()) {
+        for (AppointmentStatus status : appointmentStatusesForDashboard()) {
             breakdown.put(status.name(), countByStatus(status));
         }
         return breakdown;
@@ -53,5 +55,11 @@ public class MetricsService {
             breakdown.put(status.name(), countQueueByStatus(status));
         }
         return breakdown;
+    }
+
+    private java.util.List<AppointmentStatus> appointmentStatusesForDashboard() {
+        return Arrays.stream(AppointmentStatus.values())
+            .filter(status -> status != AppointmentStatus.RESCHEDULED)
+            .collect(Collectors.toList());
     }
 }

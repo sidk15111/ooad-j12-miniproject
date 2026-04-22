@@ -36,6 +36,7 @@
 
     <section class="panel">
         <h2 style="margin-top:0;">Generate Report</h2>
+        <p style="margin-top:0; color:#475569;">Reports now include both window activity and current live snapshot totals.</p>
         <form th:action="@{/admin/reports/generate}" method="post">
             <select name="type" required>
                 <option value="daily" th:selected="${reportType == 'daily'}">Daily</option>

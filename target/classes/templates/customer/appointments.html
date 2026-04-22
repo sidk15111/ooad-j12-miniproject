@@ -40,14 +40,12 @@
         <div th:if="${error}" class="msg err" th:text="${error}"></div>
 
         <form th:action="@{/customer/appointments}" method="post">
-            <input name="customerName" placeholder="Customer name" required>
             <input name="slotTime" type="datetime-local" required>
             <button type="submit">Create</button>
         </form>
 
         <p style="margin-top:10px; color:#334155; font-size:0.95rem;">
-            After you <strong>Check-In</strong>, this appointment appears in the Reception page under
-            <strong>Checked-In Appointments Ready For Queue</strong>.
+            Reception handles appointment check-in. You can create, confirm, and cancel your own appointments.
         </p>
     </section>
 
@@ -74,9 +72,6 @@
                 <td>
                     <form th:action="@{/customer/appointments/{id}/confirm(id=${appointment.id})}" method="post">
                         <button type="submit">Confirm</button>
-                    </form>
-                    <form th:action="@{/customer/appointments/{id}/checkin(id=${appointment.id})}" method="post">
-                        <button type="submit">Check-In</button>
                     </form>
                     <form th:action="@{/customer/appointments/{id}/cancel(id=${appointment.id})}" method="post">
                         <button class="warn" type="submit">Cancel</button>

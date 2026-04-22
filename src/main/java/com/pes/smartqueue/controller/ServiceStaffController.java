@@ -4,18 +4,13 @@ import com.pes.smartqueue.model.queue.QueueEntry;
 import com.pes.smartqueue.model.session.ServiceSession;
 import com.pes.smartqueue.service.QueueService;
 import com.pes.smartqueue.service.ServiceSessionService;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/staff")
@@ -29,65 +24,31 @@ public class ServiceStaffController {
     }
 
     @GetMapping("/sessions")
-    public String sessions(Model model) {
-        List<ServiceSession> sessions = serviceSessionService.list();
-        Map<Long, QueueEntry> assignedBySession = new java.util.HashMap<>();
-        for (ServiceSession session : sessions) {
-            QueueEntry entry = serviceSessionService.getAssignedQueueEntry(session.getId());
-            if (entry != null) {
-                assignedBySession.put(session.getId(), entry);
-            }
-        }
-        model.addAttribute("sessions", sessions);
-        model.addAttribute("assignedBySession", assignedBySession);
+    public String sessions(Authentication authentication, Model model) {
+        ServiceSession serviceSession = serviceSessionService.requireStaffSession(authentication.getName());
+        QueueEntry assignedEntry = serviceSessionService.getAssignedQueueEntryForStaff(authentication.getName());
+        model.addAttribute("serviceSession", serviceSession);
+        model.addAttribute("assignedEntry", assignedEntry);
         model.addAttribute("queueSnapshot", queueService.getOrderedQueue());
         return "staff/sessions";
     }
 
-    @PostMapping("/sessions")
-    public String create(@RequestParam String staffUsername, RedirectAttributes redirectAttributes) {
-        try {
-            serviceSessionService.create(staffUsername);
-            redirectAttributes.addFlashAttribute("success", "Session created");
-        } catch (RuntimeException ex) {
-            redirectAttributes.addFlashAttribute("error", ex.getMessage());
-        }
-        return "redirect:/staff/sessions";
+    @PostMapping("/availability/available")
+    public String markAvailable(Authentication authentication, RedirectAttributes redirectAttributes) {
+        return transition(() -> serviceSessionService.setStaffAvailability(authentication.getName(), true),
+            "You are marked as AVAILABLE", redirectAttributes);
     }
 
-    @PostMapping("/sessions/{id}/activate")
-    public String activate(@PathVariable long id, RedirectAttributes redirectAttributes) {
-        return transition(() -> serviceSessionService.activate(id), "Session activated", redirectAttributes);
+    @PostMapping("/availability/unavailable")
+    public String markUnavailable(Authentication authentication, RedirectAttributes redirectAttributes) {
+        return transition(() -> serviceSessionService.setStaffAvailability(authentication.getName(), false),
+            "You are marked as UNAVAILABLE", redirectAttributes);
     }
 
-    @PostMapping("/sessions/{id}/pause")
-    public String pause(@PathVariable long id, RedirectAttributes redirectAttributes) {
-        return transition(() -> serviceSessionService.pause(id), "Session paused", redirectAttributes);
-    }
-
-    @PostMapping("/sessions/{id}/resume")
-    public String resume(@PathVariable long id, RedirectAttributes redirectAttributes) {
-        return transition(() -> serviceSessionService.resume(id), "Session resumed", redirectAttributes);
-    }
-
-    @PostMapping("/sessions/{id}/complete")
-    public String complete(@PathVariable long id, RedirectAttributes redirectAttributes) {
-        return transition(() -> serviceSessionService.complete(id), "Session completed", redirectAttributes);
-    }
-
-    @PostMapping("/sessions/{id}/start-next")
-    public String startNextForSession(@PathVariable long id, RedirectAttributes redirectAttributes) {
-        return transition(() -> serviceSessionService.startNextQueueEntry(id), "Started next queue entry for session", redirectAttributes);
-    }
-
-    @PostMapping("/sessions/{id}/complete-current")
-    public String completeCurrentForSession(@PathVariable long id, RedirectAttributes redirectAttributes) {
-        return transition(() -> serviceSessionService.completeAssignedQueueEntry(id), "Completed assigned queue entry", redirectAttributes);
-    }
-
-    @PostMapping("/sessions/{id}/release-current")
-    public String releaseCurrentForSession(@PathVariable long id, RedirectAttributes redirectAttributes) {
-        return transition(() -> serviceSessionService.releaseAssignedQueueEntry(id), "Released assigned queue entry back to waiting", redirectAttributes);
+    @PostMapping("/assigned/complete")
+    public String completeAssigned(Authentication authentication, RedirectAttributes redirectAttributes) {
+        return transition(() -> serviceSessionService.completeAssignedQueueEntryForStaff(authentication.getName()),
+            "Assigned patient marked as completed", redirectAttributes);
     }
 
     private String transition(Runnable transitionAction, String successMessage,

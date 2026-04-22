@@ -53,11 +53,14 @@
                 <td th:text="${u.role}"></td>
                 <td th:text="${u.active}"></td>
                 <td>
-                    <form th:action="@{/admin/users/{username}/approve(username=${u.username})}" method="post">
-                        <button type="submit">Approve</button>
+                    <form th:action="@{/admin/users/{username}/reactivate(username=${u.username})}" method="post">
+                        <button type="submit">Reactivate</button>
                     </form>
                     <form th:action="@{/admin/users/{username}/deactivate(username=${u.username})}" method="post">
                         <button class="warn" type="submit">Deactivate</button>
+                    </form>
+                    <form th:action="@{/admin/users/{username}/delete(username=${u.username})}" method="post">
+                        <button class="warn" type="submit">Delete</button>
                     </form>
                 </td>
             </tr>

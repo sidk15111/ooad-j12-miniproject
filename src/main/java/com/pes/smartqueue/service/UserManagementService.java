@@ -1,5 +1,6 @@
 package com.pes.smartqueue.service;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -11,14 +12,15 @@ import java.util.Map;
 @Service
 public class UserManagementService {
     private static final List<String> ALLOWED_ROLES = List.of("CUSTOMER", "RECEPTIONIST", "SERVICE_STAFF", "ADMIN");
+    private static final BCryptPasswordEncoder PASSWORD_ENCODER = new BCryptPasswordEncoder();
 
     private final Map<String, ManagedUserProfile> users = new LinkedHashMap<>();
 
     public UserManagementService() {
-        users.put("admin", new ManagedUserProfile("admin", "admin123", "ADMIN", true));
-        users.put("reception", new ManagedUserProfile("reception", "reception123", "RECEPTIONIST", true));
-        users.put("customer", new ManagedUserProfile("customer", "customer123", "CUSTOMER", true));
-        users.put("staff", new ManagedUserProfile("staff", "staff123", "SERVICE_STAFF", true));
+        users.put("admin", new ManagedUserProfile("admin", PASSWORD_ENCODER.encode("admin123"), "ADMIN", true));
+        users.put("reception", new ManagedUserProfile("reception", PASSWORD_ENCODER.encode("reception123"), "RECEPTIONIST", true));
+        users.put("customer", new ManagedUserProfile("customer", PASSWORD_ENCODER.encode("customer123"), "CUSTOMER", true));
+        users.put("staff", new ManagedUserProfile("staff", PASSWORD_ENCODER.encode("staff123"), "SERVICE_STAFF", true));
     }
 
     public List<ManagedUserProfile> listUsers() {
@@ -30,6 +32,11 @@ public class UserManagementService {
     }
 
     public void approve(String username) {
+        ManagedUserProfile profile = require(username);
+        profile.setActive(true);
+    }
+
+    public void reactivate(String username) {
         ManagedUserProfile profile = require(username);
         profile.setActive(true);
     }
@@ -50,15 +57,31 @@ public class UserManagementService {
         if (users.containsKey(username)) {
             throw new IllegalArgumentException("User already exists: " + username);
         }
-        users.put(username, new ManagedUserProfile(username, password, normalizedRole, true));
+        users.put(username, new ManagedUserProfile(username, PASSWORD_ENCODER.encode(password), normalizedRole, true));
+    }
+
+    public void registerCustomer(String username, String password) {
+        addUser(username, password, "CUSTOMER");
+    }
+
+    public void deleteUser(String username) {
+        ManagedUserProfile profile = require(username);
+        if ("admin".equalsIgnoreCase(profile.getUsername())) {
+            throw new IllegalArgumentException("Default admin account cannot be deleted");
+        }
+        users.remove(username);
     }
 
     public boolean isUserActive(String username) {
         ManagedUserProfile profile = users.get(username);
         if (profile == null) {
-            return true;
+            return false;
         }
         return profile.isActive();
+    }
+
+    public ManagedUserProfile findByUsername(String username) {
+        return users.get(username);
     }
 
     public void resetSeedUsersToActive() {

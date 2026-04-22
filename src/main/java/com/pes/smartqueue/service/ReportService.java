@@ -12,9 +12,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -44,28 +46,47 @@ public class ReportService {
     }
 
     private String generateReport(String type, LocalDateTime start, LocalDateTime end) {
-        List<Appointment> appointments = appointmentRepository.findBySlotTimeBetween(start, end);
-        List<QueueEntry> queueEntries = queueEntryRepository.findByArrivalTimeBetween(start, end);
+        List<Appointment> windowAppointments = appointmentRepository.findBySlotTimeBetween(start, end);
+        List<QueueEntry> windowQueueEntries = queueEntryRepository.findByArrivalTimeBetween(start, end);
 
-        Map<String, Long> appointmentByStatus = summarizeAppointments(appointments);
-        Map<String, Long> queueByStatus = summarizeQueue(queueEntries);
+        Map<String, Long> windowAppointmentByStatus = summarizeAppointments(windowAppointments);
+        Map<String, Long> windowQueueByStatus = summarizeQueue(windowQueueEntries);
+
+        Map<String, Long> liveAppointmentByStatus = currentAppointmentSnapshot();
+        Map<String, Long> liveQueueByStatus = currentQueueSnapshot();
         long totalSessions = serviceSessionRepository.count();
 
         StringBuilder builder = new StringBuilder();
         builder.append("SmartQueue ").append(type).append(" Report\n");
         builder.append("Window: ").append(start).append(" to ").append(end).append("\n\n");
 
+        builder.append("Window activity (entries with slot/arrival inside window)\n\n");
+
         builder.append("Appointments by status\n");
-        for (Map.Entry<String, Long> entry : appointmentByStatus.entrySet()) {
+        for (Map.Entry<String, Long> entry : windowAppointmentByStatus.entrySet()) {
             builder.append("- ").append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");
         }
-        builder.append("Total appointments: ").append(appointments.size()).append("\n\n");
+        builder.append("Total appointments: ").append(windowAppointments.size()).append("\n\n");
 
         builder.append("Queue entries by status\n");
-        for (Map.Entry<String, Long> entry : queueByStatus.entrySet()) {
+        for (Map.Entry<String, Long> entry : windowQueueByStatus.entrySet()) {
             builder.append("- ").append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");
         }
-        builder.append("Total queue entries: ").append(queueEntries.size()).append("\n\n");
+        builder.append("Total queue entries: ").append(windowQueueEntries.size()).append("\n\n");
+
+        builder.append("Live snapshot (current system totals)\n\n");
+
+        builder.append("Appointments by status\n");
+        for (Map.Entry<String, Long> entry : liveAppointmentByStatus.entrySet()) {
+            builder.append("- ").append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");
+        }
+        builder.append("Total appointments: ").append(appointmentRepository.count()).append("\n\n");
+
+        builder.append("Queue entries by status\n");
+        for (Map.Entry<String, Long> entry : liveQueueByStatus.entrySet()) {
+            builder.append("- ").append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");
+        }
+        builder.append("Total queue entries: ").append(queueEntryRepository.count()).append("\n\n");
 
         builder.append("Total sessions: ").append(totalSessions).append("\n");
         return builder.toString();
@@ -73,7 +94,7 @@ public class ReportService {
 
     private Map<String, Long> summarizeAppointments(List<Appointment> appointments) {
         Map<String, Long> summary = new LinkedHashMap<>();
-        for (AppointmentStatus status : AppointmentStatus.values()) {
+        for (AppointmentStatus status : appointmentStatusesForReporting()) {
             long count = appointments.stream().filter(appointment -> appointment.getStatus() == status).count();
             summary.put(status.name(), count);
         }
@@ -87,5 +108,27 @@ public class ReportService {
             summary.put(status.name(), count);
         }
         return summary;
+    }
+
+    private Map<String, Long> currentAppointmentSnapshot() {
+        Map<String, Long> summary = new LinkedHashMap<>();
+        for (AppointmentStatus status : appointmentStatusesForReporting()) {
+            summary.put(status.name(), appointmentRepository.countByStatus(status));
+        }
+        return summary;
+    }
+
+    private Map<String, Long> currentQueueSnapshot() {
+        Map<String, Long> summary = new LinkedHashMap<>();
+        for (QueueStatus status : QueueStatus.values()) {
+            summary.put(status.name(), queueEntryRepository.countByStatus(status));
+        }
+        return summary;
+    }
+
+    private List<AppointmentStatus> appointmentStatusesForReporting() {
+        return Arrays.stream(AppointmentStatus.values())
+            .filter(status -> status != AppointmentStatus.RESCHEDULED)
+            .collect(Collectors.toList());
     }
 }

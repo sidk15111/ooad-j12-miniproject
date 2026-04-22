@@ -94,6 +94,11 @@ public class AdminController {
         return userAction(() -> userManagementService.approve(username), "User approved: " + username, redirectAttributes);
     }
 
+    @PostMapping("/users/{username}/reactivate")
+    public String reactivateUser(@PathVariable String username, RedirectAttributes redirectAttributes) {
+        return userAction(() -> userManagementService.reactivate(username), "User reactivated: " + username, redirectAttributes);
+    }
+
     @PostMapping("/users/{username}/deactivate")
     public String deactivateUser(@PathVariable String username, RedirectAttributes redirectAttributes) {
         return userAction(() -> userManagementService.deactivate(username), "User deactivated: " + username, redirectAttributes);
@@ -105,6 +110,11 @@ public class AdminController {
                           @RequestParam String role,
                           RedirectAttributes redirectAttributes) {
         return userAction(() -> userManagementService.addUser(username, password, role), "User added: " + username, redirectAttributes);
+    }
+
+    @PostMapping("/users/{username}/delete")
+    public String deleteUser(@PathVariable String username, RedirectAttributes redirectAttributes) {
+        return userAction(() -> userManagementService.deleteUser(username), "User deleted: " + username, redirectAttributes);
     }
 
     @GetMapping("/metrics")
