@@ -30,7 +30,6 @@ Built as a Mini Project for the Object-Oriented Analysis and Design course (Grou
 - [Team](#team)
 
 ---
-
 ## Overview
 
 SmartQueue coordinates three distinct roles across a shared service workflow:
