@@ -7,7 +7,6 @@ import com.pes.smartqueue.pattern.state.appointment.CompletedAppointmentState;
 import com.pes.smartqueue.pattern.state.appointment.ConfirmedAppointmentState;
 import com.pes.smartqueue.pattern.state.appointment.CreatedAppointmentState;
 import com.pes.smartqueue.pattern.state.appointment.ExpiredAppointmentState;
-import com.pes.smartqueue.pattern.state.appointment.RescheduledAppointmentState;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -51,11 +50,6 @@ public class Appointment {
         currentState.confirm(this);
     }
 
-    public void reschedule() {
-        hydrateState();
-        currentState.reschedule(this);
-    }
-
     public void checkIn() {
         hydrateState();
         currentState.checkIn(this);
@@ -90,7 +84,6 @@ public class Appointment {
         }
         switch (status) {
             case CONFIRMED -> currentState = new ConfirmedAppointmentState();
-            case RESCHEDULED -> currentState = new RescheduledAppointmentState();
             case CHECKED_IN -> currentState = new CheckedInAppointmentState();
             case COMPLETED -> currentState = new CompletedAppointmentState();
             case CANCELLED -> currentState = new CancelledAppointmentState();

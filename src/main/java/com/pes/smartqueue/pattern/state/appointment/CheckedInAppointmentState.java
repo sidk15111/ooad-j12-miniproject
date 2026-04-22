@@ -11,11 +11,6 @@ public class CheckedInAppointmentState implements AppointmentState {
     }
 
     @Override
-    public void reschedule(Appointment context) {
-        throw new InvalidAppointmentTransitionException("Cannot reschedule checked-in appointment");
-    }
-
-    @Override
     public void checkIn(Appointment context) {
         throw new InvalidAppointmentTransitionException("Appointment already checked in");
     }

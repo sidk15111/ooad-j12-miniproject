@@ -4,7 +4,6 @@ com/pes/smartqueue/model/appointment/Appointment.class
 com/pes/smartqueue/pattern/state/appointment/AppointmentState.class
 com/pes/smartqueue/service/ServiceSessionService.class
 com/pes/smartqueue/SmartQueueApplication.class
-com/pes/smartqueue/pattern/state/appointment/RescheduledAppointmentState.class
 com/pes/smartqueue/model/queue/QueueStatus.class
 com/pes/smartqueue/pattern/state/session/ServiceSessionState.class
 com/pes/smartqueue/pattern/strategy/StrictFifoStrategy.class

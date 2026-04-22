@@ -10,11 +10,6 @@ public class CompletedAppointmentState implements AppointmentState {
     }
 
     @Override
-    public void reschedule(Appointment context) {
-        throw new InvalidAppointmentTransitionException("Cannot reschedule completed appointment");
-    }
-
-    @Override
     public void checkIn(Appointment context) {
         throw new InvalidAppointmentTransitionException("Cannot check in completed appointment");
     }

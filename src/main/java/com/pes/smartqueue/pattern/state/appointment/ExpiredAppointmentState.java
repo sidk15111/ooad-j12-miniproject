@@ -10,11 +10,6 @@ public class ExpiredAppointmentState implements AppointmentState {
     }
 
     @Override
-    public void reschedule(Appointment context) {
-        throw new InvalidAppointmentTransitionException("Cannot reschedule expired appointment");
-    }
-
-    @Override
     public void checkIn(Appointment context) {
         throw new InvalidAppointmentTransitionException("Cannot check in expired appointment");
     }

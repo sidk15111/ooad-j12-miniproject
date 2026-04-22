@@ -12,11 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -94,7 +92,7 @@ public class ReportService {
 
     private Map<String, Long> summarizeAppointments(List<Appointment> appointments) {
         Map<String, Long> summary = new LinkedHashMap<>();
-        for (AppointmentStatus status : appointmentStatusesForReporting()) {
+        for (AppointmentStatus status : AppointmentStatus.values()) {
             long count = appointments.stream().filter(appointment -> appointment.getStatus() == status).count();
             summary.put(status.name(), count);
         }
@@ -112,7 +110,7 @@ public class ReportService {
 
     private Map<String, Long> currentAppointmentSnapshot() {
         Map<String, Long> summary = new LinkedHashMap<>();
-        for (AppointmentStatus status : appointmentStatusesForReporting()) {
+        for (AppointmentStatus status : AppointmentStatus.values()) {
             summary.put(status.name(), appointmentRepository.countByStatus(status));
         }
         return summary;
@@ -124,11 +122,5 @@ public class ReportService {
             summary.put(status.name(), queueEntryRepository.countByStatus(status));
         }
         return summary;
-    }
-
-    private List<AppointmentStatus> appointmentStatusesForReporting() {
-        return Arrays.stream(AppointmentStatus.values())
-            .filter(status -> status != AppointmentStatus.RESCHEDULED)
-            .collect(Collectors.toList());
     }
 }

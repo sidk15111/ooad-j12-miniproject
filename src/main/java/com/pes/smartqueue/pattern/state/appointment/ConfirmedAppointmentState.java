@@ -10,11 +10,6 @@ public class ConfirmedAppointmentState implements AppointmentState {
     }
 
     @Override
-    public void reschedule(Appointment context) {
-        context.transitionTo(new RescheduledAppointmentState(), AppointmentStatus.RESCHEDULED);
-    }
-
-    @Override
     public void checkIn(Appointment context) {
         context.transitionTo(new CheckedInAppointmentState(), AppointmentStatus.CHECKED_IN);
     }

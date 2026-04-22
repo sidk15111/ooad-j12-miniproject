@@ -23,7 +23,6 @@
 /workspace/src/main/java/com/pes/smartqueue/pattern/state/appointment/ConfirmedAppointmentState.java
 /workspace/src/main/java/com/pes/smartqueue/pattern/state/appointment/CreatedAppointmentState.java
 /workspace/src/main/java/com/pes/smartqueue/pattern/state/appointment/ExpiredAppointmentState.java
-/workspace/src/main/java/com/pes/smartqueue/pattern/state/appointment/RescheduledAppointmentState.java
 /workspace/src/main/java/com/pes/smartqueue/pattern/state/queue/CancelledState.java
 /workspace/src/main/java/com/pes/smartqueue/pattern/state/queue/CompletedState.java
 /workspace/src/main/java/com/pes/smartqueue/pattern/state/queue/InProgressState.java
