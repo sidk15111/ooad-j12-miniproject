@@ -128,7 +128,6 @@ public class ReportService {
 
     private List<AppointmentStatus> appointmentStatusesForReporting() {
         return Arrays.stream(AppointmentStatus.values())
-            .filter(status -> status != AppointmentStatus.RESCHEDULED)
             .collect(Collectors.toList());
     }
 }

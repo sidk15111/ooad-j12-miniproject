@@ -59,7 +59,6 @@ public class MetricsService {
 
     private java.util.List<AppointmentStatus> appointmentStatusesForDashboard() {
         return Arrays.stream(AppointmentStatus.values())
-            .filter(status -> status != AppointmentStatus.RESCHEDULED)
             .collect(Collectors.toList());
     }
 }
