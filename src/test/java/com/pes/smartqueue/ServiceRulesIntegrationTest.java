@@ -14,6 +14,8 @@ import com.pes.smartqueue.repository.ServiceSessionRepository;
 import com.pes.smartqueue.service.AppointmentService;
 import com.pes.smartqueue.service.QueueService;
 import com.pes.smartqueue.service.ServiceSessionService;
+import com.pes.smartqueue.service.UserManagementService;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,11 +71,39 @@ class ServiceRulesIntegrationTest {
     @Autowired
     private ServiceSessionRepository serviceSessionRepository;
 
+    @Autowired
+    private UserManagementService userManagementService;
+
+    @Autowired
+    private UserDetailsService userDetailsService;
+
     @BeforeEach
     void cleanDb() {
         serviceSessionRepository.deleteAll();
         queueEntryRepository.deleteAll();
         appointmentRepository.deleteAll();
+        userManagementService.resetSeedUsersToActive();
+    }
+
+    @Test
+    void deactivatedCustomer_isBlockedFromCustomerPage() throws Exception {
+        userManagementService.deactivate("customer");
+
+        mockMvc.perform(get("/customer/appointments")
+                .with(SecurityMockMvcRequestPostProcessors.user("customer").roles("CUSTOMER")))
+            .andExpect(status().is3xxRedirection());
+    }
+
+    @Test
+    void customerCanSelfRegisterWithoutAdminApproval() throws Exception {
+        mockMvc.perform(post("/register/customer")
+                .with(csrf())
+                .param("username", "newcustomer")
+                .param("password", "newpass123"))
+            .andExpect(status().is3xxRedirection());
+
+        assertTrue(userManagementService.isUserActive("newcustomer"));
+        assertNotNull(userDetailsService.loadUserByUsername("newcustomer"));
     }
 
     @Test

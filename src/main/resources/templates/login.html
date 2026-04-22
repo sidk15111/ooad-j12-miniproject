@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartQueue Login</title>
+    <style>
+        :root {
+            --bg: #f4f8f6;
+            --card: #ffffff;
+            --line: #dbe3ef;
+            --ink: #1f2937;
+            --muted: #475569;
+            --primary: #0f766e;
+            --secondary: #1d4ed8;
+            --danger: #b91c1c;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Trebuchet MS", sans-serif;
+            background: linear-gradient(140deg, #f6f4eb, #e8f4ef 45%, #edf3fb);
+            color: var(--ink);
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+        }
+        .layout {
+            width: min(960px, 94vw);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 14px;
+        }
+        .panel {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 18px;
+            box-shadow: 0 10px 18px rgba(15, 23, 42, 0.07);
+        }
+        h1, h2 { margin-top: 0; }
+        .msg {
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .ok { background: #dcfce7; color: #166534; }
+        .err { background: #fee2e2; color: var(--danger); }
+        form { display: grid; gap: 8px; }
+        input, button {
+            font: inherit;
+            padding: 9px 10px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+        }
+        button {
+            border: none;
+            color: #fff;
+            background: var(--primary);
+            cursor: pointer;
+            font-weight: 700;
+        }
+        .register-btn { background: var(--secondary); }
+        .muted { color: var(--muted); font-size: 0.95rem; line-height: 1.5; }
+    </style>
+</head>
+<body>
+<div class="layout">
+    <section class="panel">
+        <h1>SmartQueue Login</h1>
+        <p class="muted">Login with your existing account to continue.</p>
+
+        <div th:if="${param.error}" class="msg err">Invalid username or password</div>
+        <div th:if="${param.logout}" class="msg ok">You have been logged out</div>
+        <div th:if="${success}" class="msg ok" th:text="${success}"></div>
+        <div th:if="${error}" class="msg err" th:text="${error}"></div>
+
+        <form th:action="@{/login}" method="post">
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+    </section>
+
+    <section class="panel">
+        <h2>Register As New Customer</h2>
+        <p class="muted">New customers can create an account instantly. Admin approval is not required. Admin can still deactivate/reactivate/delete accounts later.</p>
+        <form th:action="@{/register/customer}" method="post">
+            <input type="text" name="username" placeholder="Choose username" required>
+            <input type="password" name="password" placeholder="Choose password" required>
+            <button class="register-btn" type="submit">Register as New Customer</button>
+        </form>
+    </section>
+</div>
+</body>
+</html>

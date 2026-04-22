@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -56,12 +57,28 @@ class WorkflowEndToEndIntegrationTest {
 
     @Test
     void addWalkInAtReception_reflectsInReceptionAndStaffViews() throws Exception {
-        mockMvc.perform(post("/reception/queue")
+        mockMvc.perform(post("/reception/queue/walk-in")
                 .with(csrf())
             .with(user("reception").roles("RECEPTIONIST"))
-                .param("customerName", "Walk In One")
-                .param("type", "WALK_IN"))
+                .param("customerName", "Walk In One"))
             .andExpect(status().is3xxRedirection());
+
+        QueueEntry waitingEntry = queueEntryRepository.findAll().get(0);
+        assertEquals(QueueStatus.WAITING, waitingEntry.getStatus());
+
+        mockMvc.perform(post("/staff/availability/available")
+                .with(csrf())
+                .with(user("staff").roles("SERVICE_STAFF")))
+            .andExpect(status().is3xxRedirection());
+
+        mockMvc.perform(post("/reception/queue/{id}/assign", waitingEntry.getId())
+                .with(csrf())
+                .with(user("reception").roles("RECEPTIONIST"))
+                .param("staffUsername", "staff"))
+            .andExpect(status().is3xxRedirection());
+
+        QueueEntry inProgress = queueEntryRepository.findById(waitingEntry.getId()).orElseThrow();
+        assertEquals(QueueStatus.IN_PROGRESS, inProgress.getStatus());
 
         mockMvc.perform(get("/reception/queue")
             .with(user("reception").roles("RECEPTIONIST")))
@@ -85,7 +102,6 @@ class WorkflowEndToEndIntegrationTest {
         mockMvc.perform(post("/customer/appointments")
                 .with(csrf())
             .with(user("customer").roles("CUSTOMER"))
-                .param("customerName", "Asha")
                 .param("slotTime", slotTime))
             .andExpect(status().is3xxRedirection());
 
@@ -96,38 +112,34 @@ class WorkflowEndToEndIntegrationTest {
             .with(user("customer").roles("CUSTOMER")))
             .andExpect(status().is3xxRedirection());
 
-        mockMvc.perform(post("/customer/appointments/{id}/checkin", appointment.getId())
+        mockMvc.perform(post("/reception/appointments/{id}/checkin", appointment.getId())
                 .with(csrf())
-            .with(user("customer").roles("CUSTOMER")))
+            .with(user("reception").roles("RECEPTIONIST")))
             .andExpect(status().is3xxRedirection());
 
         Appointment checkedIn = appointmentRepository.findById(appointment.getId()).orElseThrow();
         assertEquals(AppointmentStatus.CHECKED_IN, checkedIn.getStatus());
+
+        mockMvc.perform(post("/staff/availability/available")
+                .with(csrf())
+            .with(user("staff").roles("SERVICE_STAFF")))
+            .andExpect(status().is3xxRedirection());
 
         mockMvc.perform(post("/reception/queue/from-appointment/{appointmentId}", appointment.getId())
                 .with(csrf())
             .with(user("reception").roles("RECEPTIONIST")))
             .andExpect(status().is3xxRedirection());
 
-        mockMvc.perform(post("/staff/sessions")
+        QueueEntry waitingEntry = queueEntryRepository.findAll().get(0);
+        assertEquals(QueueStatus.WAITING, waitingEntry.getStatus());
+
+        mockMvc.perform(post("/reception/queue/{id}/assign", waitingEntry.getId())
                 .with(csrf())
-            .with(user("staff").roles("SERVICE_STAFF"))
-                .param("staffUsername", "staff1"))
+                .with(user("reception").roles("RECEPTIONIST"))
+                .param("staffUsername", "staff"))
             .andExpect(status().is3xxRedirection());
 
-        ServiceSession session = serviceSessionRepository.findAllByOrderByIdAsc().get(0);
-
-        mockMvc.perform(post("/staff/sessions/{id}/activate", session.getId())
-                .with(csrf())
-            .with(user("staff").roles("SERVICE_STAFF")))
-            .andExpect(status().is3xxRedirection());
-
-        mockMvc.perform(post("/staff/sessions/{id}/start-next", session.getId())
-                .with(csrf())
-            .with(user("staff").roles("SERVICE_STAFF")))
-            .andExpect(status().is3xxRedirection());
-
-        mockMvc.perform(post("/staff/sessions/{id}/complete-current", session.getId())
+        mockMvc.perform(post("/staff/assigned/complete")
                 .with(csrf())
             .with(user("staff").roles("SERVICE_STAFF")))
             .andExpect(status().is3xxRedirection());
@@ -136,31 +148,40 @@ class WorkflowEndToEndIntegrationTest {
         assertEquals(1, allEntries.size());
         assertEquals(QueueStatus.COMPLETED, allEntries.get(0).getStatus());
 
-        ServiceSession updatedSession = serviceSessionRepository.findById(session.getId()).orElseThrow();
+        ServiceSession updatedSession = serviceSessionRepository.findByStaffUsername("staff").orElseThrow();
         assertEquals(ServiceSessionStatus.ACTIVE, updatedSession.getStatus());
         assertNull(updatedSession.getActiveQueueEntryId());
     }
 
     @Test
-    void createSession_redirectDoesNotCrashWhenAnotherSessionHasStaleQueueReference() throws Exception {
-        ServiceSession stale = new ServiceSession("legacy-staff");
-        stale.activate();
-        stale.assignQueueEntry(99999L);
-        serviceSessionRepository.save(stale);
-
-        mockMvc.perform(post("/staff/sessions")
-                .with(csrf())
-                .with(user("staff").roles("SERVICE_STAFF"))
-                .param("staffUsername", "fresh-staff"))
-            .andExpect(status().is3xxRedirection());
-
+    void staffPageAutoCreatesSessionForAdminDefinedStaff() throws Exception {
         mockMvc.perform(get("/staff/sessions")
                 .with(user("staff").roles("SERVICE_STAFF")))
-            .andExpect(status().isOk())
-            .andExpect(model().attribute("sessions", hasSize(2)));
+            .andExpect(status().isOk());
 
-        ServiceSession staleReloaded = serviceSessionRepository.findById(stale.getId()).orElseThrow();
-        assertEquals(ServiceSessionStatus.ACTIVE, staleReloaded.getStatus());
-        assertNull(staleReloaded.getActiveQueueEntryId());
+        ServiceSession session = serviceSessionRepository.findByStaffUsername("staff").orElseThrow();
+        assertEquals("staff", session.getStaffUsername());
+        assertEquals(ServiceSessionStatus.IDLE, session.getStatus());
+    }
+
+    @Test
+    void customerSeesOnlyOwnAppointments() throws Exception {
+        mockMvc.perform(post("/customer/appointments")
+                .with(csrf())
+                .with(user("customer").roles("CUSTOMER"))
+                .param("slotTime", LocalDateTime.now().plusHours(2).withNano(0).toString()))
+            .andExpect(status().is3xxRedirection());
+
+        mockMvc.perform(post("/customer/appointments")
+                .with(csrf())
+                .with(user("anotherCustomer").roles("CUSTOMER"))
+                .param("slotTime", LocalDateTime.now().plusHours(3).withNano(0).toString()))
+            .andExpect(status().is3xxRedirection());
+
+        mockMvc.perform(get("/customer/appointments")
+                .with(user("customer").roles("CUSTOMER")))
+            .andExpect(status().isOk())
+            .andExpect(model().attribute("appointments", hasSize(1)))
+            .andExpect(model().attribute("appointments", not(hasSize(2))));
     }
 }

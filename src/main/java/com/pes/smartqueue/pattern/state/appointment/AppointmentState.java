@@ -5,7 +5,11 @@ import com.pes.smartqueue.model.appointment.Appointment;
 public interface AppointmentState {
     void confirm(Appointment context);
 
+    void reschedule(Appointment context);
+
     void checkIn(Appointment context);
+
+    void complete(Appointment context);
 
     void cancel(Appointment context);
 

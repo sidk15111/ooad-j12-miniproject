@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.pes.smartqueue.ServiceRulesIntegrationTest
 -------------------------------------------------------------------------------
-Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 20.17 s -- in com.pes.smartqueue.ServiceRulesIntegrationTest
+Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 22.27 s -- in com.pes.smartqueue.ServiceRulesIntegrationTest

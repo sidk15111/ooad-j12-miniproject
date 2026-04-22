@@ -91,6 +91,7 @@
     <a sec:authorize="hasAnyRole('RECEPTIONIST','ADMIN')" th:href="@{/reception/queue}">Open Reception Desk</a>
     <a sec:authorize="hasAnyRole('CUSTOMER','ADMIN')" th:href="@{/customer/appointments}" style="margin-left: 8px; background: #1f4d7a;">Open Customer Appointments</a>
     <a sec:authorize="hasAnyRole('SERVICE_STAFF','ADMIN')" th:href="@{/staff/sessions}" style="margin-left: 8px; background: #7a3f1f;">Open Service Sessions</a>
+    <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/dashboard}" style="margin-left: 8px; background: #0f172a;">Open Admin Dashboard</a>
 
     <div class="hint" sec:authorize="!hasRole('ADMIN')">
         Some modules are hidden by role-based access. Use the <strong>admin / admin123</strong> login to access all three modules.

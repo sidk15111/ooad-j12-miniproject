@@ -11,7 +11,13 @@ import java.util.List;
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
     List<Appointment> findAllByOrderBySlotTimeAsc();
 
+    List<Appointment> findByCustomerNameOrderBySlotTimeAsc(String customerName);
+
     List<Appointment> findByStatusOrderBySlotTimeAsc(AppointmentStatus status);
+
+    long countByStatus(AppointmentStatus status);
+
+    List<Appointment> findBySlotTimeBetween(LocalDateTime start, LocalDateTime end);
 
     List<Appointment> findByStatusInAndSlotTimeBefore(Collection<AppointmentStatus> statuses, LocalDateTime cutoff);
 }

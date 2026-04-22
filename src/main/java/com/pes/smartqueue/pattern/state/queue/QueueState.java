@@ -7,6 +7,8 @@ public interface QueueState {
 
     void completeService(QueueEntry context);
 
+    void markNoShow(QueueEntry context);
+
     void cancel(QueueEntry context);
 
     void releaseToWaiting(QueueEntry context);

@@ -3,6 +3,7 @@ package com.pes.smartqueue.model.queue;
 import com.pes.smartqueue.pattern.state.queue.CancelledState;
 import com.pes.smartqueue.pattern.state.queue.CompletedState;
 import com.pes.smartqueue.pattern.state.queue.InProgressState;
+import com.pes.smartqueue.pattern.state.queue.NoShowState;
 import com.pes.smartqueue.pattern.state.queue.QueueState;
 import com.pes.smartqueue.pattern.state.queue.WaitingState;
 import jakarta.persistence.Entity;
@@ -69,6 +70,11 @@ public class QueueEntry {
         currentState.cancel(this);
     }
 
+    public void markNoShow() {
+        hydrateState();
+        currentState.markNoShow(this);
+    }
+
     public void releaseToWaiting() {
         hydrateState();
         currentState.releaseToWaiting(this);
@@ -90,6 +96,7 @@ public class QueueEntry {
             case IN_PROGRESS -> currentState = new InProgressState();
             case COMPLETED -> currentState = new CompletedState();
             case CANCELLED -> currentState = new CancelledState();
+            case NO_SHOW -> currentState = new NoShowState();
             case WAITING -> currentState = new WaitingState();
             default -> throw new IllegalStateException("Unhandled queue state: " + status);
         }

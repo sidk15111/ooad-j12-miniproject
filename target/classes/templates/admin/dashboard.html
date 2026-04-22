@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+        body { margin: 0; font-family: "Trebuchet MS", sans-serif; background: linear-gradient(145deg, #f5f3ea, #edf6f0); color: #1f2937; }
+        .container { width: min(980px, 94vw); margin: 26px auto; display: grid; gap: 14px; }
+        .panel { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 18px; box-shadow: 0 10px 18px rgba(15, 23, 42, 0.06); }
+        .topbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .link { text-decoration: none; border: 1px solid #cbd5e1; color: #0f172a; padding: 7px 12px; border-radius: 8px; background: #fff; }
+        .nav { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-top: 10px; }
+        .tile { display: block; text-decoration: none; background: #0f766e; color: #fff; padding: 16px; border-radius: 12px; font-weight: 700; }
+        .tile.secondary { background: #1e3a8a; }
+        .tile.warm { background: #9a3412; }
+        .tile.dark { background: #111827; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <section class="panel">
+        <div class="topbar">
+            <div>
+                <h1 style="margin:0;">Admin Dashboard</h1>
+                <p style="margin:6px 0 0; color:#475569;">SmartQueue system controls and reporting</p>
+            </div>
+            <div class="actions">
+                <a class="link" th:href="@{/}">Home</a>
+                <form th:action="@{/logout}" method="post" style="margin:0;">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <button style="border:none; border-radius:8px; padding:8px 12px; background:#334155; color:#fff; cursor:pointer;" type="submit">Logout</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="nav">
+            <a class="tile" th:href="@{/admin/config}">System Configuration</a>
+            <a class="tile secondary" th:href="@{/admin/users}">User Management</a>
+            <a class="tile warm" th:href="@{/admin/metrics}">Metrics Dashboard</a>
+            <a class="tile dark" th:href="@{/admin/reports}">Report Generation</a>
+        </div>
+    </section>
+</div>
+</body>
+</html>
