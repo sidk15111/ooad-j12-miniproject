@@ -32,7 +32,7 @@ public class RescheduledAppointmentState implements AppointmentState {
 
     @Override
     public void expire(Appointment context) {
-        throw new InvalidAppointmentTransitionException("Cannot expire rescheduled appointment before confirmation");
+        context.transitionTo(new ExpiredAppointmentState(), AppointmentStatus.EXPIRED);
     }
 
     @Override

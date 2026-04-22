@@ -1,0 +1,6 @@
+# Java
+target/
+*.class
+
+# PDF
+*.pdf
